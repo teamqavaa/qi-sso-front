@@ -1,18 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useState, useTransition } from "react";
 // Importations des composants shadcn/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Social from "./Social";
-import FooterTab from "./FooterTab";
+import { loginAction } from "@/actions/auth";
 
 interface LoginProps {
   onSwitchToRegister: () => void;
 }
 export default function Login({onSwitchToRegister}: LoginProps) {
+    const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState<string | null>()
+
+    // Gestion de la connexion classique (Email ou Téléphone)
+  const handleFormSubmit = async (formData: FormData) => {
+    setError(null);
+    startTransition(async () => {
+      const result = await loginAction(formData);
+      if (result?.error) setError(result.error);
+      if (result?.success) window.location.href = "/dashboard";
+    });
+  };
   return (
     <div className="flex w-full items-center justify-center p-8 lg:w-1/2 sm:p-12 lg:p-16">
       <div className="w-full max-w-md space-y-6">
@@ -38,26 +50,29 @@ export default function Login({onSwitchToRegister}: LoginProps) {
           </span>
           <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
         </div>
-
+        {error && (
+        <div className="p-3 text-sm text-red-500 bg-red-50 rounded-lg border border-red-200">{error}</div>
+      )}
         {/* Formulaire Standard */}
-        <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+        <form  action={handleFormSubmit} className="space-y-5">
           <div className="space-y-4">
 
 
             <div className="grid gap-1.5">
               <Label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="text-slate-700 dark:text-slate-300"
               >
                 Email or Phone{" "}
               </Label>
               <Input
-                id="email"
-                type="email"
+                id="identifier"
+                name="identifier"
+                type="text"
                 autoComplete="email"
                 required
                 className="h-11"
-                placeholder="nom@entreprise.com"
+                placeholder="email or phone"
               />
             </div>
 
@@ -80,6 +95,7 @@ export default function Login({onSwitchToRegister}: LoginProps) {
               <Input
                 id="password"
                 type="password"
+                name="password"
                 autoComplete="current-password"
                 required
                 className="h-11"
@@ -103,8 +119,9 @@ export default function Login({onSwitchToRegister}: LoginProps) {
           <Button
             type="submit"
             className="w-full h-11 bg-blue-600 hover:bg-blue-500 text-white font-semibold transition active:scale-[0.99] cursor-pointer"
+            disabled={isPending}
           >
-           Secure sign in
+           {isPending ? "Checking..." : "Secure sign in"}
           </Button>
         </form>
 
@@ -113,7 +130,7 @@ export default function Login({onSwitchToRegister}: LoginProps) {
           Do you already have an account?
           <button
           onClick={onSwitchToRegister}
-            className=" ml-2 font-semibold underline hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+            className=" ml-2 font-semibold underline hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer transition-all"
           >
             Sign Up
           </button>
