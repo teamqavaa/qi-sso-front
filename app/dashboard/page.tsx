@@ -1,4 +1,5 @@
 import Profile from "@/components/dashboard/profile";
+import Link from "next/link";
 
 export default function Dashboard() {
   return (
@@ -10,6 +11,7 @@ export default function Dashboard() {
 
       {/* Affichage des informations du profil connecté */}
       <Profile />
+
     </div>
   );
 }
