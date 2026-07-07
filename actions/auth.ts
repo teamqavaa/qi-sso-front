@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function loginAction(formData: FormData) {
   // 1. On récupère la valeur du champ "identifier" de votre formulaire Next.js
@@ -164,6 +165,47 @@ export async function getMeAction() {
   } catch (error) {
     console.error("🚨 Erreur réseau getMeAction :", error);
     return { user: null, error: "Erreur réseau" };
+  }
+}
+
+export async function clearAuthCookies() {
+  const cookieStore = await cookies();
+  cookieStore.delete("access_token");
+  cookieStore.delete("refresh_token");
+}
+
+export async function logoutAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete("access_token");
+  cookieStore.delete("refresh_token");
+  redirect("/");
+}
+
+export async function updateProfileAction(field: string, value: string) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("access_token")?.value;
+
+  if (!accessToken) {
+    return { ok: false, message: "Not authenticated" };
+  }
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/users/me/", {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ [field]: value }),
+    });
+
+    if (!response.ok) {
+      return { ok: false, message: "Failed to update profile" };
+    }
+
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Network error" };
   }
 }
 

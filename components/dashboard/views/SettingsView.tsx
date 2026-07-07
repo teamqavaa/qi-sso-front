@@ -1,40 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import EditableField from "@/components/ui/EditableField";
-import { useUser, UserProfile } from "@/components/contexts/UserContext";
+import EditableField from "@/components/EditableField";
+import { useUser } from "@/context/UserContext";
+import { updateProfileAction } from "@/actions/auth";
 
-// Map UserProfile keys to field keys for EditableField
-type FieldKey = keyof UserProfile;
+type EditableFields = "full_name" | "display_name" | "bio" | "birth_date" | "city" | "country" | "language";
 
 export default function SettingsView() {
-  const { user, updateField } = useUser();
-  const [isSaving, setIsSaving] = useState<FieldKey | null>(null);
+  const { user, updateUser } = useUser();
 
-  const fields = [
-    { key: "fullName" as FieldKey, label: "Full Name", value: user.fullName },
-    { key: "displayName" as FieldKey, label: "Display Name", value: user.displayName },
-    { key: "bio" as FieldKey, label: "Bio", value: user.bio },
-    { key: "birthDate" as FieldKey, label: "Birth Date", value: user.birthDate, type: "date" },
-    { key: "city" as FieldKey, label: "City", value: user.city },
-    { key: "country" as FieldKey, label: "Country", value: user.country },
-    { key: "language" as FieldKey, label: "Language", value: user.language },
+  if (!user) {
+    return (
+      <div className="px-8 py-10 max-w-2xl mx-auto w-full">
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  const fields: { key: EditableFields; label: string; value: string | null }[] = [
+    { key: "full_name", label: "Full Name", value: user.full_name },
+    { key: "display_name", label: "Display Name", value: user.display_name },
+    { key: "bio", label: "Bio", value: user.bio },
+    { key: "birth_date", label: "Birth Date", value: user.birth_date },
+    { key: "city", label: "City", value: user.city },
+    { key: "country", label: "Country", value: user.country },
+    { key: "language", label: "Language", value: user.language },
   ];
 
-  async function handleSave(key: FieldKey, val: string) {
-    setIsSaving(key);
-    try {
-      // Mock async save callback
-      const mockOnSave = async (field: FieldKey, value: string) => {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-      };
-      await updateField(key, val, mockOnSave);
-    } catch (error) {
-      console.error("Failed to save:", error);
-    } finally {
-      setIsSaving(null);
-    }
+  function handleSave(field: EditableFields) {
+    return async (newValue: string) => {
+      const result = await updateProfileAction(field, newValue);
+      if (result.ok) {
+        updateUser({ [field]: newValue });
+      }
+      return result;
+    };
   }
 
   return (
@@ -44,16 +44,20 @@ export default function SettingsView() {
         <p className="text-sm text-muted-foreground mt-1">Manage your profile and preferences.</p>
       </div>
 
-      {/* Avatar section */}
       <div className="bg-card rounded-xl border border-border p-6 mb-6">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">Avatar</p>
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-[#007bff]/10 flex items-center justify-center text-[#007bff] font-semibold text-lg flex-shrink-0">
-            {user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+            {(user.display_name || user.full_name || "User")
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase()}
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">{user.fullName}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">@{user.displayName}</p>
+            <p className="text-sm font-medium text-foreground">{user.full_name}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">@{user.display_name}</p>
           </div>
           <button className="ml-auto text-xs text-[#007bff] border border-[#007bff]/30 px-3 py-1.5 rounded-lg hover:bg-[#007bff]/5 transition-colors">
             Change photo
@@ -61,18 +65,12 @@ export default function SettingsView() {
         </div>
       </div>
 
-      {/* Editable fields */}
       <div className="bg-card rounded-xl border border-border px-6">
-        {fields.map((field) => (
-          <EditableField 
-            key={field.key} 
-            field={field} 
-            onSave={(key, val) => handleSave(key as FieldKey, val)} 
-          />
+        {fields.map(({ key, label, value }) => (
+          <EditableField key={key} label={label} value={value} onSave={handleSave(key)} />
         ))}
       </div>
 
-      {/* Danger zone */}
       <div className="mt-6 bg-card rounded-xl border border-border px-6 py-5">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Account</p>
         <button className="text-sm text-red-500 hover:text-red-600 transition-colors">

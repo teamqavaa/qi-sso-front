@@ -5,7 +5,7 @@ import styles from "../Dashboard.module.css";
 import StatCard from "../StatCard";
 import LabCard from "../LabCard";
 import { Stat, Lab } from "../types";
-import { useUser } from "@/components/contexts/UserContext";
+import { useUser } from "@/context/UserContext";
 
 export default function DashboardView({
   stats,
@@ -21,23 +21,21 @@ export default function DashboardView({
   const { user } = useUser();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const firstName = user?.full_name?.split(" ")[0] || "there";
 
   return (
     <div className="px-8 py-10 max-w-5xl mx-auto w-full">
-      {/* Greeting */}
       <div className="mb-10">
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">{greeting}, {user.fullName.split(" ")[0]}.</h1>
+        <h1 className="text-2xl font-semibold text-foreground tracking-tight">{greeting}, {firstName}.</h1>
         <p className="text-sm text-muted-foreground mt-1">Here's where you stand today.</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-12">
         {stats.map((stat, i) => (
           <StatCard key={stat.label} stat={stat} isFirst={i === 0} />
         ))}
       </div>
 
-      {/* In Progress */}
       <section className="mb-12">
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">In Progress</h2>
@@ -55,7 +53,6 @@ export default function DashboardView({
         </div>
       </section>
 
-      {/* Recommended */}
       <section>
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">Recommended for You</h2>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-// Importations des composants shadcn/ui
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,16 +13,16 @@ interface LoginProps {
   onSwitchToRegister: () => void;
 }
 export default function Login({onSwitchToRegister}: LoginProps) {
+    const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>()
 
-    // Gestion de la connexion classique (Email ou Téléphone)
   const handleFormSubmit = async (formData: FormData) => {
     setError(null);
     startTransition(async () => {
       const result = await loginAction(formData);
       if (result?.error) setError(result.error);
-      if (result?.success) window.location.href = "/dashboard";
+      if (result?.success) router.push("/dashboard");
     });
   };
   return (

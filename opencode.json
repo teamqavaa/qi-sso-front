@@ -1,0 +1,9 @@
+{
+  "provider": {
+    "openai": {
+      "baseURL": "https://openrouter.ai",
+      "apiKey": ""
+    }
+  },
+  "model": "openai/deepseek/deepseek-v4-flash:free"
+}
