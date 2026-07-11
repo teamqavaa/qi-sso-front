@@ -19,7 +19,7 @@ export default async function Profile() {
     <Card className="w-full max-w-md mx-auto mt-8 shadow-md">
       <CardHeader>
         <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
-          Mon Profil Utilisateur
+          My User Profile
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

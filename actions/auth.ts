@@ -3,7 +3,6 @@
 import { cookies } from "next/headers";
 
 export async function loginAction(formData: FormData) {
-  // 1. On récupère la valeur du champ "identifier" de votre formulaire Next.js
   const identifier = formData.get("identifier") as string;
   const password = formData.get("password") as string;
 
@@ -11,8 +10,6 @@ export async function loginAction(formData: FormData) {
     return { error: "Fields are required." };
   }
 
-  // 2. On aligne le payload sur ce que votre CustomTokenObtainPairSerializer attend :
-  // Il lui faut une clé 'username' (qui recevra l'email ou le téléphone) et 'password'
   const payload = {
     username: identifier,
     password: password,
@@ -28,22 +25,18 @@ export async function loginAction(formData: FormData) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.log("🔴 Erreur Django REST :", response.status, errorData);
-
-      // Si Django renvoie une erreur de validation (ex: "Aucun compte trouvé"),
-      // on affiche le message précis renvoyé par le serializer
       return { error: errorData.detail || "Invalid credentials." };
     }
 
     const data = await response.json();
     const cookieStore = await cookies();
 
-    // 3. Stockage des jetons d'authentification cryptés
     cookieStore.set("access_token", data.access, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 15, // 15 minutes
+      maxAge: 60 * 15,
     });
 
     cookieStore.set("refresh_token", data.refresh, {
@@ -51,7 +44,7 @@ export async function loginAction(formData: FormData) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 jours
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return { success: true };
@@ -60,20 +53,16 @@ export async function loginAction(formData: FormData) {
   }
 }
 
-
 export async function registerAction(formData: FormData) {
-  // 1. Récupération des champs distincts du formulaire Next.js
   const emailInput = (formData.get("email") as string)?.trim() || null;
   const phoneInput = (formData.get("phone") as string)?.trim() || null;
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
 
-  // Sécurité : l'utilisateur doit fournir au moins l'email OU le téléphone, et le reste des champs obligatoires
   if ((!emailInput && !phoneInput) || !password || !name) {
     return { error: "Le nom, le mot de passe et au moins un identifiant (Email ou Téléphone) sont requis." };
   }
 
-  // 2. Construction du payload propre pour le UserSerializer de Django
   const payload = {
     name: name,
     password: password,
@@ -82,7 +71,6 @@ export async function registerAction(formData: FormData) {
   };
 
   try {
-    // 3. Envoi de la requête POST vers votre UserViewSet
     const response = await fetch("http://127.0.0.1:8000/api/users/", {
       method: "POST",
       headers: {
@@ -95,23 +83,19 @@ export async function registerAction(formData: FormData) {
 
     if (!response.ok) {
       console.error("🔴 Erreur d'inscription Django REST :", response.status, data);
-
-      // Traduction des erreurs de validation uniques renvoyées par Django
       if (data.email) return { error: "Cet e-mail est déjà utilisé." };
       if (data.phone) return { error: "Ce numéro de téléphone est déjà utilisé." };
       return { error: data.detail || "Une erreur est survenue lors de l'inscription." };
     }
 
-    // 4. ⚡ CONNEXION AUTOMATIQUE APRES INSCRIPTION REUSSIE
     const cookieStore = await cookies();
 
-    // Enregistrement des cookies HttpOnly sécurisés reçus depuis le ViewSet
     cookieStore.set("access_token", data.access, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 15, // 15 minutes
+      maxAge: 60 * 15,
     });
 
     cookieStore.set("refresh_token", data.refresh, {
@@ -119,7 +103,7 @@ export async function registerAction(formData: FormData) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 jours
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return { success: true };
@@ -134,21 +118,17 @@ export async function getMeAction() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
 
-  // Si aucun token n'est trouvé, l'utilisateur n'est pas connecté
   if (!accessToken) {
     return { user: null, error: "Non authentifié" };
   }
 
   try {
-    // Appel de l'action 'me' personnalisée de votre UserViewSet Django
-    // On utilise 'web:8000' car la requête part du serveur Next.js vers le conteneur Django
     const response = await fetch("http://127.0.0.1:8000/api/users/me/", {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      // On désactive le cache pour toujours avoir les données à jour
       cache: "no-store",
     });
 
@@ -167,4 +147,52 @@ export async function getMeAction() {
   }
 }
 
+export async function loginWithGoogleAction(code: string) {
+  if (!code) {
+    return { error: "Google code is required." };
+  }
 
+  try {
+    const response = await fetch("http://127.0.0.1:8000/api/api/auth/google/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: code }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      // 🔧 ICI : Remplacement des 'print' par 'console.log'
+      console.log("\n--- 🔴 DIAGNOSTIC ERREUR DJANGO GOOGLE ---");
+      console.log("Statut HTTP :", response.status);
+      console.log("Détails renvoyés par l'API :", JSON.stringify(errorData, null, 2));
+      console.log("------------------------------------------\n");
+
+      return { error: errorData.detail || "Google authentication failed." };
+    }
+
+    const data = await response.json();
+    const cookieStore = await cookies();
+
+    cookieStore.set("access_token", data.access, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 15,
+    });
+
+    cookieStore.set("refresh_token", data.refresh, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur serveur Next.js (Google) :", error);
+    return { error: "Unable to connect to the authentication server." };
+  }
+}
