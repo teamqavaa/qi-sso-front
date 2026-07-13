@@ -1,40 +1,23 @@
-import { ArrowRight, Plus } from "lucide-react";
-import { Lab } from "./types";
-import Link from "next/link";
+import type { Lab } from "@/types/lab";
 
-export default function LabCard({ lab, langColors, isRecommended = false }: { lab: Lab; langColors: Record<string, string>; isRecommended?: boolean }) {
+export default function LabCard({ lab, langColors }: { lab: Lab; langColors: Record<string, string> }) {
   return (
-    <div
-      key={lab.id}
-      className={`${isRecommended ? "grid-cols-2 bg-card rounded-xl border border-border p-5 flex items-center justify-between group" : "flex-shrink-0 w-56 bg-card rounded-xl border border-border p-5 flex flex-col justify-between"}`}
-    >
+    <div className="bg-card rounded-xl border border-border p-5 flex items-center justify-between group">
       <div>
-        <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mb-3 ${langColors[lab.lang] ?? "text-gray-600 bg-gray-100"}`}>
-          {lab.lang}
+        <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mb-3 ${langColors[lab.language] ?? "text-gray-600 bg-gray-100"}`}>
+          {lab.language}
         </span>
         <p className="text-sm font-medium text-foreground leading-snug mb-4">{lab.title}</p>
       </div>
 
-      {!isRecommended && lab.progress !== undefined ? (
-        <div>
-          <div className="w-full h-1 bg-[#f0f2f5] rounded-full overflow-hidden mb-2">
-            <div
-              className="h-full rounded-full bg-[#007bff]"
-              style={{ width: `${lab.progress}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-muted-foreground">{lab.progress}% done</span>
-            <Link href={`/labs/${lab.id}`} className="w-7 h-7 rounded-full bg-[#007bff] flex items-center justify-center text-white hover:bg-[#0066d6] transition-colors shadow-sm">
-              <ArrowRight size={13} />
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <Link href={`/labs/${lab.id}`} className="w-7 h-7 rounded-full border border-[#007bff] text-[#007bff] flex items-center justify-center hover:bg-[#007bff] hover:text-white transition-colors ml-4 flex-shrink-0">
-          <Plus size={13} />
-        </Link>
-      )}
+      <a
+        href={`http://localhost:3001/labs/${lab.id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#007bff] text-white text-xs font-medium hover:bg-[#0066d6] transition-colors shadow-sm flex-shrink-0"
+      >
+        Start
+      </a>
     </div>
   );
 }

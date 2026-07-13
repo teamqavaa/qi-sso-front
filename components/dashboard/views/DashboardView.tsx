@@ -1,22 +1,33 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
 import styles from "../Dashboard.module.css";
 import StatCard from "../StatCard";
 import LabCard from "../LabCard";
-import { Stat, Lab } from "../types";
+import type { Stat } from "../types";
+import type { Lab } from "@/types/lab";
 import { useUser } from "@/context/UserContext";
+
+const langColors: Record<string, string> = {
+  python: "text-indigo-600 bg-indigo-50",
+  javascript: "text-yellow-700 bg-yellow-50",
+  typescript: "text-blue-700 bg-blue-50",
+  react: "text-blue-600 bg-blue-50",
+  "node.js": "text-green-700 bg-green-50",
+  sql: "text-orange-600 bg-orange-50",
+  css: "text-pink-600 bg-pink-50",
+  html: "text-orange-600 bg-orange-50",
+  git: "text-gray-700 bg-gray-100",
+  java: "text-red-600 bg-red-50",
+  go: "text-cyan-600 bg-cyan-50",
+  rust: "text-orange-700 bg-orange-50",
+};
 
 export default function DashboardView({
   stats,
-  inProgressLabs,
-  recommendedLabs,
-  langColors,
+  labs,
 }: {
   stats: Stat[];
-  inProgressLabs: Lab[];
-  recommendedLabs: Lab[];
-  langColors: Record<string, string>;
+  labs: Lab[];
 }) {
   const { user } = useUser();
   const hour = new Date().getHours();
@@ -36,32 +47,20 @@ export default function DashboardView({
         ))}
       </div>
 
-      <section className="mb-12">
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">In Progress</h2>
-          <button className="text-xs text-[#007bff] hover:underline flex items-center gap-0.5">
-            View all <ChevronRight size={12} />
-          </button>
-        </div>
-
-        <div
-          className={`flex gap-4 overflow-x-auto pb-2 ${styles.scrollbarHidden}`}
-        >
-          {inProgressLabs.map((lab) => (
-            <LabCard key={lab.id} lab={lab} langColors={langColors} />
-          ))}
-        </div>
-      </section>
-
       <section>
         <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">Recommended for You</h2>
+          <h2 className="text-sm font-semibold text-foreground tracking-wide uppercase">All Labs</h2>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          {recommendedLabs.map((lab) => (
-            <LabCard key={lab.id} lab={lab} langColors={langColors} isRecommended />
-          ))}
-        </div>
+
+        {labs.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No labs available.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {labs.map((lab) => (
+              <LabCard key={lab.id} lab={lab} langColors={langColors} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
