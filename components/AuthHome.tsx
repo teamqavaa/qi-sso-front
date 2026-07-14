@@ -20,7 +20,7 @@ export default function AuthHome() {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
         <div className="absolute bottom-20 left-16 right-16 z-10 text-write">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20 backdrop-blur-sm">
-            Ignite Your Futur
+            Ignite Your Future
           </div>
           <p className="mt-4 text-base text-slate-300 leading-relaxed max-w-md">
             Sign in once for seamless, secure access to all your enterprise
