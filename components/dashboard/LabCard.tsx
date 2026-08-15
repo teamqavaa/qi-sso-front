@@ -1,9 +1,20 @@
 import type { Lab } from "@/types/lab";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
-const statusStyles: Record<string, string> = {
-  not_started: "bg-gray-100 text-gray-600",
-  in_progress: "bg-blue-100 text-blue-700",
-  completed: "bg-green-100 text-green-700",
+// Monochrome intensity instead of color: outline = untouched, secondary = in
+// flight, filled = done. Keeps the card inside the neutral dashboard palette.
+const statusVariants: Record<string, "outline" | "secondary" | "default"> = {
+  not_started: "outline",
+  in_progress: "secondary",
+  completed: "default",
+};
+
+const statusLabels: Record<string, string> = {
+  not_started: "Not started",
+  in_progress: "In progress",
+  completed: "Completed",
 };
 
 const buttonLabels: Record<string, string> = {
@@ -14,33 +25,50 @@ const buttonLabels: Record<string, string> = {
 
 export default function LabCard({
   lab,
-  langColors,
   labStatus = "not_started",
+  progressPercent = 0,
+  completedSteps = 0,
+  totalSteps = 0,
 }: {
   lab: Lab;
-  langColors: Record<string, string>;
   labStatus?: "not_started" | "in_progress" | "completed";
+  progressPercent?: number;
+  completedSteps?: number;
+  totalSteps?: number;
 }) {
+  const showProgress = labStatus === "in_progress" && totalSteps > 0;
+
   return (
-    <div className="bg-card rounded-xl border border-border p-5 flex items-center justify-between group">
-      <div>
-        <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full mb-3 ${langColors[lab.language] ?? "text-gray-600 bg-gray-100"}`}>
+    <div className="bg-card rounded-xl border border-border p-5 flex items-center justify-between gap-4 group">
+      <div className="min-w-0">
+        <Badge variant="outline" className="mb-3 text-muted-foreground">
           {lab.language}
-        </span>
-        <p className="text-sm font-medium text-foreground leading-snug mb-4">{lab.title}</p>
-        <span className={`inline-block text-[10px] font-medium px-2 py-0.5 rounded-full ${statusStyles[labStatus]}`}>
-          {labStatus.replace("_", " ")}
-        </span>
+        </Badge>
+        <p className="text-sm font-medium text-foreground leading-snug mb-3 truncate">
+          {lab.title}
+        </p>
+
+        {showProgress && (
+          <div className="mb-3">
+            <Progress value={progressPercent} className="mb-1" />
+            <p className="text-[10px] text-muted-foreground">
+              {completedSteps}/{totalSteps} steps
+            </p>
+          </div>
+        )}
+
+        <Badge variant={statusVariants[labStatus]}>{statusLabels[labStatus]}</Badge>
       </div>
 
-      <a
-        href={`http://localhost:3001/labs/${lab.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#007bff] text-white text-xs font-medium hover:bg-[#0066d6] transition-colors shadow-sm flex-shrink-0"
-      >
-        {buttonLabels[labStatus]}
-      </a>
+      <Button asChild size="sm" className="flex-shrink-0">
+        <a
+          href={`http://localhost:3001/labs/${lab.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {buttonLabels[labStatus]}
+        </a>
+      </Button>
     </div>
   );
 }

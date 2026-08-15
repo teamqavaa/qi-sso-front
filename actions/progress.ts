@@ -7,6 +7,9 @@ export type ProgressEntry = {
   status: string;
   attempts: number;
   completed_at: string | null;
+  completed_steps: number;
+  total_steps: number;
+  progress_percent: number;
 };
 
 export async function getProgressAction(): Promise<ProgressEntry[]> {

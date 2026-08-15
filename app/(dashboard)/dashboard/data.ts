@@ -1,5 +1,9 @@
-import type { StatsData } from "@/actions/stats";
-import type { StudentDashboardData } from "@/components/dashboard/student/types";
+import type { StatsData, WeekDay } from "@/actions/stats";
+import type {
+  StreakData,
+  StreakDay,
+  StudentDashboardData,
+} from "@/components/dashboard/student/types";
 
 // Default dataset so the page renders while the backend endpoints for these
 // sections are still missing. Overlay real stats where they exist.
@@ -93,23 +97,42 @@ export const DEFAULT_DASHBOARD_DATA: StudentDashboardData = {
   },
 };
 
-// Overlay real stats when the backend reports them; fall back to demo values otherwise.
+const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+
+// The weekly tracker falls back to the demo week only when the backend has no
+// week data (unreachable); otherwise it mirrors the real activity days.
+function buildStreakData(week: WeekDay[]): StreakData {
+  if (week.length === 0) return DEFAULT_DASHBOARD_DATA.streak;
+
+  const days: StreakDay[] = week.map((day, index) => ({
+    label: WEEKDAY_LABELS[index] ?? day.date,
+    state: day.practiced ? "done" : day.is_today ? "today" : "upcoming",
+  }));
+  const practicedCount = week.filter((day) => day.practiced).length;
+  return {
+    summary: `${practicedCount} of 7 days practiced`,
+    days,
+  };
+}
+
 export function buildDashboardData(stats: StatsData): StudentDashboardData {
   return {
     ...DEFAULT_DASHBOARD_DATA,
+    // The stat cards always show real numbers; zero is a valid, truthful value.
     stats: [
       {
         ...DEFAULT_DASHBOARD_DATA.stats[0],
-        value: stats.labs_completed > 0 ? String(stats.labs_completed) : DEFAULT_DASHBOARD_DATA.stats[0].value,
+        value: String(stats.labs_completed),
       },
       {
         ...DEFAULT_DASHBOARD_DATA.stats[1],
-        value: stats.hours_practiced > 0 ? String(stats.hours_practiced) : DEFAULT_DASHBOARD_DATA.stats[1].value,
+        value: String(stats.hours_practiced),
       },
       {
         ...DEFAULT_DASHBOARD_DATA.stats[2],
-        value: stats.current_streak > 0 ? `${stats.current_streak} days` : DEFAULT_DASHBOARD_DATA.stats[2].value,
+        value: `${stats.current_streak} days`,
       },
     ],
+    streak: buildStreakData(stats.week),
   };
 }

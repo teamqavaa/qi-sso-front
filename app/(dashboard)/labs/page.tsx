@@ -1,23 +1,11 @@
 import { getLabsAction } from "@/actions/labs";
+import { getProgressAction } from "@/actions/progress";
 import LabCard from "@/components/dashboard/LabCard";
-
-const langColors: Record<string, string> = {
-  python: "text-indigo-600 bg-indigo-50",
-  javascript: "text-yellow-700 bg-yellow-50",
-  typescript: "text-blue-700 bg-blue-50",
-  react: "text-blue-600 bg-blue-50",
-  "node.js": "text-green-700 bg-green-50",
-  sql: "text-orange-600 bg-orange-50",
-  css: "text-pink-600 bg-pink-50",
-  html: "text-orange-600 bg-orange-50",
-  git: "text-gray-700 bg-gray-100",
-  java: "text-red-600 bg-red-50",
-  go: "text-cyan-600 bg-cyan-50",
-  rust: "text-orange-700 bg-orange-50",
-};
 
 export default async function LabsPage() {
   const { labs, error } = await getLabsAction();
+  const progress = await getProgressAction();
+  const progressByLab = new Map(progress.map((entry) => [entry.lab_id, entry]));
 
   if (error || labs.length === 0) {
     return (
@@ -33,9 +21,19 @@ export default async function LabsPage() {
         <h1 className="text-2xl font-semibold text-foreground tracking-tight">My Labs</h1>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        {labs.map((lab) => (
-          <LabCard key={lab.id} lab={lab} langColors={langColors} />
-        ))}
+        {labs.map((lab) => {
+          const entry = progressByLab.get(lab.id);
+          return (
+            <LabCard
+              key={lab.id}
+              lab={lab}
+              labStatus={(entry?.status as "not_started" | "in_progress" | "completed") ?? "not_started"}
+              progressPercent={entry?.progress_percent ?? 0}
+              completedSteps={entry?.completed_steps ?? 0}
+              totalSteps={entry?.total_steps ?? 0}
+            />
+          );
+        })}
       </div>
     </div>
   );
