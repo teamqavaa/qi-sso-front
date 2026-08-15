@@ -1,31 +1,10 @@
 .container {
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: #f8f9fb;
-}
-
-.sidebar {
-  background: #f0f2f5;
-  border-right: 1px solid rgba(0, 0, 0, 0.07);
+  background-color: #fafafa;
 }
 
 .header {
   background: #ffffff;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-}
-
-.navItemActive {
-  color: #007bff;
-  background: rgba(0, 123, 255, 0.06);
-  border-left: 2px solid #007bff;
-  padding-left: calc(0.75rem - 2px);
-}
-
-.navItemInactive {
-  color: #8a8fa3;
-}
-
-.statCard {
-  border-bottom: 2px solid #007bff;
 }
 
 .scrollbarHidden {

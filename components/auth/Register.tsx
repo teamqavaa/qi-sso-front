@@ -12,6 +12,7 @@ import FooterTab from "./FooterTab";
 
 // Importation de votre Server Action
 import { registerAction } from "@/actions/auth";
+import { safeReturnPath } from "@/lib/sso";
 
 interface RegisterProps {
   onSwitchToLogin: () => void;
@@ -36,7 +37,9 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
         setError(result.error);
       } else if (result?.success) {
         // Redirection vers le dashboard après la connexion automatique réussie
-        router.push("/dashboard");
+        // Retourne à la page d'origine si l'utilisateur venait d'une autre app.
+        const next = new URLSearchParams(window.location.search).get("next");
+        router.push(safeReturnPath(next));
         router.refresh();
       }
     });

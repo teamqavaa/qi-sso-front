@@ -1,14 +1,10 @@
-import DashboardView from "@/components/dashboard/views/DashboardView";
-import { mockStats } from "./mock-data";
-import { getLabsAction } from "@/actions/labs";
+import StudentDashboard from "@/components/dashboard/views/StudentDashboard";
+import { getStatsAction } from "@/actions/stats";
+import { buildDashboardData } from "./data";
 
 export default async function DashboardPage() {
-  const { labs } = await getLabsAction();
+  // Overlay live stats onto the typed default dataset; new sections stay mock until backend endpoints exist.
+  const stats = await getStatsAction();
 
-  return (
-    <DashboardView
-      stats={mockStats}
-      labs={labs}
-    />
-  );
+  return <StudentDashboard data={buildDashboardData(stats)} />;
 }
