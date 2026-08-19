@@ -8,7 +8,6 @@ import {
   BarChart2,
   Settings,
   LogOut,
-  Bell,
   Search,
   Sparkles,
   ChevronDown,
@@ -18,18 +17,23 @@ import { usePathname, useRouter } from "next/navigation";
 import { UserProvider, useUser } from "@/context/UserContext";
 import type { User } from "@/types/user";
 import { logoutAction } from "@/actions/auth";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { DEFAULT_STUDENT_LEVEL, type StudentLevel } from "@/components/dashboard/profile-data";
 import { cn } from "@/lib/utils";
 import styles from "@/components/dashboard/Dashboard.module.css";
 
@@ -63,11 +67,9 @@ function lowercase(value: string | null | undefined): string {
 }
 
 function Sidebar({
-  level,
   className,
   onNavigate,
 }: {
-  level: StudentLevel;
   className?: string;
   onNavigate?: () => void;
 }) {
@@ -112,22 +114,6 @@ function Sidebar({
               {location ? `${location} · ${lowercase(user?.language)}` : ""}
             </p>
           </div>
-        </div>
-
-        <div className="mt-3 rounded-xl bg-white p-3">
-          <div className="flex items-baseline justify-between">
-            <span className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-500">
-              Level {level.level}
-            </span>
-            <span className="font-mono text-[10px] tabular-nums text-zinc-500">
-              {level.xp.toLocaleString()} / {level.xpMax.toLocaleString()} XP
-            </span>
-          </div>
-          <Progress
-            value={Math.round((level.xp / level.xpMax) * 100)}
-            className="mt-1.5 h-1.5"
-            aria-label={`Level ${level.level} progress`}
-          />
         </div>
       </div>
 
@@ -182,6 +168,8 @@ function Sidebar({
 function Header() {
   const { user } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isSigningOut, startSignOut] = useTransition();
+  const router = useRouter();
   const initials = getInitials(user?.display_name || user?.full_name);
 
   return (
@@ -207,7 +195,6 @@ function Header() {
           <SheetContent side="left" className="w-72 bg-zinc-950 p-0 text-white">
             <SheetTitle className="sr-only">Menu</SheetTitle>
             <Sidebar
-              level={DEFAULT_STUDENT_LEVEL}
               className="h-full w-full"
               onNavigate={() => setMenuOpen(false)}
             />
@@ -239,28 +226,41 @@ function Header() {
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          aria-label="Notifications"
-          className="relative rounded-full text-muted-foreground hover:text-foreground"
-        >
-          <Bell size={16} strokeWidth={1.5} />
-          <Badge className="absolute -top-0.5 -right-0.5 h-4 min-w-4 rounded-full px-1 text-[10px]">
-            3
-          </Badge>
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="h-auto gap-2 rounded-full p-0.5 pr-2"
-        >
-          <Avatar className="size-8">
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <ChevronDown size={14} strokeWidth={1.5} className="text-muted-foreground" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label="Account menu"
+              className="h-auto gap-2 rounded-full p-0.5 pr-2"
+            >
+              <Avatar className="size-8">
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+              <ChevronDown size={14} strokeWidth={1.5} className="text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuLabel>
+              {user?.display_name || user?.full_name || "User"}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={() => router.push("/settings")}
+            >
+              <Settings size={15} strokeWidth={1.5} />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => startSignOut(() => logoutAction())}
+              disabled={isSigningOut}
+              className="text-destructive focus:text-destructive"
+            >
+              <LogOut size={15} strokeWidth={1.5} />
+              {isSigningOut ? "Signing out..." : "Sign out"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
@@ -277,7 +277,7 @@ export default function DashboardShell({
     <UserProvider initialUser={initialUser}>
       <div className={cn("flex h-dvh w-full overflow-hidden bg-zinc-50", styles.container)}>
         {/* The drawer in Header replaces this sidebar below lg. */}
-        <Sidebar level={DEFAULT_STUDENT_LEVEL} className="hidden lg:flex" />
+        <Sidebar className="hidden lg:flex" />
         <div className="flex h-full min-w-0 flex-1 flex-col">
           <Header />
           <main className={cn("flex-1 overflow-y-auto", styles.scrollbarHidden)}>
