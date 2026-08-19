@@ -55,19 +55,21 @@ export const DEFAULT_DASHBOARD_DATA: StudentDashboardData = {
       { label: "S", state: "upcoming" },
     ],
   },
+  // The whole section is mock data; every badge renders faded until the
+  // achievements endpoint exists. earned/locked are placeholder flags.
   achievements: [
     {
       title: "First Lab",
       detail: "Completed Mar 2",
       icon: "award",
-      earned: true,
+      earned: false,
       locked: false,
     },
     {
       title: "5-Day Streak",
       detail: "Completed Apr 11",
       icon: "flame",
-      earned: true,
+      earned: false,
       locked: false,
     },
     {
@@ -75,14 +77,14 @@ export const DEFAULT_DASHBOARD_DATA: StudentDashboardData = {
       detail: "Complete 10 CLI labs",
       icon: "terminal",
       earned: false,
-      locked: true,
+      locked: false,
     },
     {
       title: "Security Aware",
       detail: "Finish Security Path",
       icon: "shield",
       earned: false,
-      locked: true,
+      locked: false,
     },
   ],
   upNext: {

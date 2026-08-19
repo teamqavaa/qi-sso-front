@@ -14,6 +14,10 @@ import { UpNextCard } from "@/components/dashboard/student/UpNextCard";
 import type { StudentDashboardData } from "@/components/dashboard/student/types";
 import { useUser } from "@/context/UserContext";
 
+// Decorative sections render mock data; keep them hidden until their backend
+// endpoints exist (see TODO.md). Set true to preview them faded.
+const SHOW_PLACEHOLDER_SECTIONS = false;
+
 // Mono tracked eyebrows keep section hierarchy quiet and visually consistent.
 function Eyebrow({ children }: { children: ReactNode }) {
   return (
@@ -36,7 +40,9 @@ export default function StudentDashboard({
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-      <NotificationBanner data={data.banner} />
+      {SHOW_PLACEHOLDER_SECTIONS && (
+        <NotificationBanner data={data.banner} className="opacity-70" />
+      )}
 
       <Card className="mt-6 rounded-2xl bg-zinc-100">
         <CardContent className="flex flex-col gap-1">
@@ -53,22 +59,26 @@ export default function StudentDashboard({
         ))}
       </section>
 
-      <section className="mt-8">
-        <Eyebrow>Continue where you left off</Eyebrow>
-        <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-5">
-          <ContinueCard data={data.continueCard} className="lg:col-span-3" />
-          <div className="flex flex-col rounded-xl border border-border bg-white px-2 py-1 lg:col-span-2">
-            <span className="px-2 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Keep going
-            </span>
-            {data.lessons.map((lesson) => (
-              <LessonRow key={lesson.title} data={lesson} />
-            ))}
-          </div>
-        </div>
-      </section>
+      {SHOW_PLACEHOLDER_SECTIONS && (
+        <>
+          <section className="mt-8">
+            <Eyebrow>Continue where you left off</Eyebrow>
+            <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-5">
+              <ContinueCard data={data.continueCard} className="bg-zinc-50 opacity-70 lg:col-span-3" />
+              <div className="flex flex-col rounded-xl border border-border bg-zinc-50 opacity-70 px-2 py-1 lg:col-span-2">
+                <span className="px-2 pb-1 pt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Keep going
+                </span>
+                {data.lessons.map((lesson) => (
+                  <LessonRow key={lesson.title} data={lesson} />
+                ))}
+              </div>
+            </div>
+          </section>
 
-      <Separator className="mt-8" />
+          <Separator className="mt-8" />
+        </>
+      )}
 
       <section className="mt-8">
         <Eyebrow>Weekly streak</Eyebrow>
@@ -77,18 +87,22 @@ export default function StudentDashboard({
         </div>
       </section>
 
-      <section className="mt-8">
-        <Eyebrow>Achievements</Eyebrow>
-        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {data.achievements.map((achievement) => (
-            <AchievementBadge key={achievement.title} data={achievement} />
-          ))}
-        </div>
-      </section>
+      {SHOW_PLACEHOLDER_SECTIONS && (
+        <section className="mt-8">
+          <Eyebrow>Achievements</Eyebrow>
+          <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {data.achievements.map((achievement) => (
+              <AchievementBadge key={achievement.title} data={achievement} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="mt-8">
-        <UpNextCard data={data.upNext} className="rounded-2xl" />
-      </section>
+      {SHOW_PLACEHOLDER_SECTIONS && (
+        <section className="mt-8">
+          <UpNextCard data={data.upNext} className="opacity-70 rounded-2xl" />
+        </section>
+      )}
     </div>
   );
 }
