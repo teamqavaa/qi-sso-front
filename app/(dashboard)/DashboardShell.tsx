@@ -12,6 +12,7 @@ import {
   Sparkles,
   ChevronDown,
   Menu,
+  Route,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { UserProvider, useUser } from "@/context/UserContext";
@@ -39,6 +40,7 @@ import styles from "@/components/dashboard/Dashboard.module.css";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", iconName: "LayoutDashboard" as const },
+  { id: "learning-path", label: "Learning Path", iconName: "Route" as const },
   { id: "labs", label: "My Labs", iconName: "FlaskConical" as const },
   { id: "courses", label: "Courses", iconName: "BookOpen" as const },
   { id: "progress", label: "Progress", iconName: "BarChart2" as const },
@@ -47,11 +49,17 @@ const navItems = [
 
 const navIconMap = {
   LayoutDashboard,
+  Route,
   FlaskConical,
   BookOpen,
   BarChart2,
   Settings,
 };
+
+const learningPathItems = [
+  { path: "/learning-path/skill", label: "Skill Path" },
+  { path: "/learning-path/career", label: "Career Path" },
+];
 
 function getInitials(name: string | null | undefined): string {
   return (name || "User")
@@ -78,6 +86,9 @@ function Sidebar({
   const router = useRouter();
   const navSegment = pathname.split("/").filter(Boolean)[0] || "dashboard";
   const [isSigningOut, startSignOut] = useTransition();
+  const [expandedId, setExpandedId] = useState<string | null>(() =>
+    navSegment === "learning-path" ? "learning-path" : null
+  );
 
   const initials = getInitials(user?.display_name || user?.full_name);
   const location = user?.city
@@ -121,6 +132,71 @@ function Sidebar({
         {navItems.map(({ id, label, iconName }) => {
           const Icon = navIconMap[iconName];
           const isActive = navSegment === id;
+          const hasChildren = id === "learning-path";
+          const isExpanded = expandedId === id;
+
+          const buttonClass = cn(
+            "mb-0.5 h-auto w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm",
+            isActive
+              ? "bg-white font-medium text-zinc-950 hover:bg-white hover:text-zinc-950"
+              : "text-white/70 hover:bg-white/10 hover:text-white"
+          );
+
+          if (hasChildren) {
+            return (
+              <div key={id}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() =>
+                    setExpandedId((current) => (current === id ? null : id))
+                  }
+                  aria-expanded={isExpanded}
+                  aria-current={isActive ? "page" : undefined}
+                  className={buttonClass}
+                >
+                  <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
+                  <span>{label}</span>
+                  <ChevronDown
+                    size={14}
+                    strokeWidth={1.5}
+                    className={cn(
+                      "ml-auto transition-transform",
+                      isExpanded && "rotate-180"
+                    )}
+                  />
+                </Button>
+                {isExpanded && (
+                  <div className="mb-0.5">
+                    {learningPathItems.map((item) => {
+                      const isSubActive = pathname === item.path;
+                      return (
+                        <Button
+                          key={item.path}
+                          type="button"
+                          variant="ghost"
+                          onClick={() => {
+                            router.push(item.path);
+                            onNavigate?.();
+                          }}
+                          aria-current={isSubActive ? "page" : undefined}
+                          className={cn(
+                            "h-auto w-full justify-start gap-3 rounded-lg py-2.5 pl-11 pr-3 text-left text-sm",
+                            isSubActive
+                              ? "bg-white font-medium text-zinc-950 hover:bg-white hover:text-zinc-950"
+                              : "text-white/70 hover:bg-white/10 hover:text-white"
+                          )}
+                        >
+                          <span>{item.label}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <Button
               key={id}
@@ -131,12 +207,7 @@ function Sidebar({
                 onNavigate?.();
               }}
               aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "mb-0.5 h-auto w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm",
-                isActive
-                  ? "bg-white font-medium text-zinc-950 hover:bg-white hover:text-zinc-950"
-                  : "text-white/70 hover:bg-white/10 hover:text-white"
-              )}
+              className={buttonClass}
             >
               <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
               <span>{label}</span>
