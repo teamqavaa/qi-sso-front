@@ -41,9 +41,14 @@ export default function LabCard({
   return (
     <div className="bg-card rounded-xl border border-border p-5 flex items-center justify-between gap-4 group">
       <div className="min-w-0">
-        <Badge variant="outline" className="mb-3 text-muted-foreground">
-          {lab.language}
-        </Badge>
+        <div className="flex items-center gap-2 mb-3">
+          <Badge variant="outline" className="text-muted-foreground">
+            {lab.language}
+          </Badge>
+          <Badge variant="outline" className="text-muted-foreground">
+            {lab.difficulty}
+          </Badge>
+        </div>
         <p className="text-sm font-medium text-foreground leading-snug mb-3 truncate">
           {lab.title}
         </p>
