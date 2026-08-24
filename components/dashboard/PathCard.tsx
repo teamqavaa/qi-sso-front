@@ -42,7 +42,7 @@ export function PathCard({
       </div>
 
       <p className="mt-auto pt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-        {courseCount} COURSES · {weekCount} WEEKS
+        {courseCount} COURSES{weekCount > 0 ? ` · ${weekCount} WEEKS` : ""}
       </p>
 
       <Button asChild variant="default" className="w-full rounded-full py-2.5">
