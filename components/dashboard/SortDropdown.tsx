@@ -7,7 +7,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 
 export type SortOption = {
@@ -46,7 +45,10 @@ export function SortDropdown({
         }}
       >
         <SelectTrigger className="h-8 min-w-[10rem] gap-6 rounded-lg bg-white px-3 text-sm text-foreground">
-          <SelectValue />
+          {/* Radix fails to bubble the item text into the trigger here. */}
+          <span data-slot="select-value">
+            {options.find((option) => option.value === currentValue)?.label}
+          </span>
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (

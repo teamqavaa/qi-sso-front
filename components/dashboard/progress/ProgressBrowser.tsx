@@ -9,7 +9,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { Course } from "@/types/course";
@@ -39,6 +38,15 @@ const STATUS_TABS: { value: ProgressStatusFilter; label: string }[] = [
   { value: "all", label: "All" },
   { value: "in_progress", label: "In Progress" },
   { value: "completed", label: "Completed" },
+];
+
+// Radix fails to bubble the chosen item's text into the trigger in this
+// setup, so the trigger renders its label from this array directly.
+const KIND_OPTIONS: { value: KindFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "paths", label: "Paths" },
+  { value: "labs", label: "Labs" },
+  { value: "courses", label: "Courses" },
 ];
 
 const KIND_LABEL: Record<ActivityEvent["kind"], Exclude<KindFilter, "all">> = {
@@ -141,13 +149,16 @@ export default function ProgressBrowser({
 
         <Select value={kind} onValueChange={(value) => setKind(value as KindFilter)}>
           <SelectTrigger aria-label="Filter by type" className="w-36 rounded-full bg-white">
-            <SelectValue />
+            <span data-slot="select-value">
+              {KIND_OPTIONS.find((option) => option.value === kind)?.label}
+            </span>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="paths">Paths</SelectItem>
-            <SelectItem value="labs">Labs</SelectItem>
-            <SelectItem value="courses">Courses</SelectItem>
+            {KIND_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

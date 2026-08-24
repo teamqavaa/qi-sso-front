@@ -13,13 +13,28 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import type { LearningPath } from "@/types/career-path";
 import type { Course } from "@/types/course";
 
 type LevelFilter = "all" | "beginner" | "intermediate" | "advanced";
 type SortKey = "newest" | "title" | "duration" | "rating";
+
+// Radix fails to bubble the chosen item's text into the trigger in this
+// setup, so every trigger renders its label from these arrays directly.
+const LEVEL_OPTIONS: { value: LevelFilter; label: string }[] = [
+  { value: "all", label: "All levels" },
+  { value: "beginner", label: "Beginner" },
+  { value: "intermediate", label: "Intermediate" },
+  { value: "advanced", label: "Advanced" },
+];
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "newest", label: "Newest" },
+  { value: "title", label: "Title A–Z" },
+  { value: "duration", label: "Shortest first" },
+  { value: "rating", label: "Highest rated" },
+];
 
 function matchesQuery(haystacks: (string | null)[], query: string): boolean {
   if (!query) return true;
@@ -109,13 +124,16 @@ export default function CoursesBrowser({
               </span>
               <Select value={level} onValueChange={(value) => setLevel(value as LevelFilter)}>
                 <SelectTrigger className="w-[170px]" aria-label="Filter courses by level">
-                  <SelectValue />
+                  <span data-slot="select-value">
+                    {LEVEL_OPTIONS.find((option) => option.value === level)?.label}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All levels</SelectItem>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
+                  {LEVEL_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -126,13 +144,16 @@ export default function CoursesBrowser({
               </span>
               <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortKey)}>
                 <SelectTrigger className="w-[160px]" aria-label="Sort courses">
-                  <SelectValue />
+                  <span data-slot="select-value">
+                    {SORT_OPTIONS.find((option) => option.value === sortBy)?.label}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="title">Title A–Z</SelectItem>
-                  <SelectItem value="duration">Shortest first</SelectItem>
-                  <SelectItem value="rating">Highest rated</SelectItem>
+                  {SORT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
