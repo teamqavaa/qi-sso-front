@@ -9,6 +9,7 @@ export type ActivityEvent = {
   detail: string;
   at: string; // ISO timestamp
   href: string;
+  status: "completed" | "in_progress";
 };
 
 const KIND_LABEL: Record<ActivityEvent["kind"], string> = {

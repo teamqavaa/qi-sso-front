@@ -12,22 +12,9 @@ import { getStatsAction } from "@/actions/stats";
 import { getLabsAction } from "@/actions/labs";
 import { getActivePathsAction } from "@/actions/learning-paths";
 import { getPathDetailAction } from "@/actions/path-detail";
-import CourseCard from "@/components/dashboard/CourseCard";
-import CompletedGrid from "@/components/dashboard/progress/CompletedGrid";
-import LabsBlock from "@/components/dashboard/progress/LabsBlock";
-import PathProgressBar from "@/components/dashboard/progress/PathProgressBar";
+import ProgressBrowser from "@/components/dashboard/progress/ProgressBrowser";
 import ProgressHeaderBand from "@/components/dashboard/progress/ProgressHeaderBand";
-import RecentActivityStrip, {
-  type ActivityEvent,
-} from "@/components/dashboard/progress/RecentActivityStrip";
-
-function SectionLabel({ children }: { children: string }) {
-  return (
-    <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-      {children}
-    </h2>
-  );
-}
+import type { ActivityEvent } from "@/components/dashboard/progress/RecentActivityStrip";
 
 export default async function ProgressPage() {
   // Courses, paths, progress and lab data are independent reads.
@@ -98,6 +85,10 @@ export default async function ProgressPage() {
             : `${Math.round(row.progress_percent)}% complete`,
         at: row.completed_at ?? row.updated_at ?? "",
         href: `/courses/${coursesById.get(row.course_id)!.slug}`,
+        status:
+          row.status === "completed"
+            ? ("completed" as const)
+            : ("in_progress" as const),
       })),
     ...labEntries
       .filter((entry) => labsById.has(entry.lab_id) && entry.completed_at)
@@ -111,11 +102,27 @@ export default async function ProgressPage() {
             : `${entry.completed_steps}/${entry.total_steps} steps`,
         at: entry.completed_at as string,
         href: "/labs",
+        status: "completed" as const,
       })),
   ]
     .filter((event) => event.at)
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 6);
+
+  const browserPaths = touchedPaths.map(({ path, steps }) => ({
+    title: path.title,
+    kind: path.kind,
+    slug: path.slug,
+    state: steps.every((step) => step.state === "completed")
+      ? ("completed" as const)
+      : ("in_progress" as const),
+    steps,
+  }));
+
+  const inFlightCourses = inFlight.map((row) => ({
+    course: coursesById.get(row.course_id)!,
+    percent: row.progress_percent,
+  }));
 
   const nothingTouched =
     touchedPaths.length === 0 &&
@@ -168,69 +175,14 @@ export default async function ProgressPage() {
             </div>
           </section>
         ) : (
-          <>
-            {touchedPaths.length > 0 && (
-              <section>
-                <SectionLabel>Learning paths</SectionLabel>
-                <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
-                  {touchedPaths.map(({ path, steps }) => (
-                    <PathProgressBar
-                      key={path.id}
-                      title={path.title}
-                      kind={path.kind}
-                      slug={path.slug}
-                      steps={steps}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {inFlight.length > 0 && (
-              <section>
-                <SectionLabel>In flight</SectionLabel>
-                <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {inFlight.map((row) => (
-                    <CourseCard
-                      key={row.course_id}
-                      course={coursesById.get(row.course_id)!}
-                      progress={{
-                        status: "in_progress",
-                        percent: row.progress_percent,
-                      }}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {labRows.length > 0 && (
-              <section>
-                <SectionLabel>Labs</SectionLabel>
-                <div className="mt-3">
-                  <LabsBlock entries={labRows} labsById={labsById} />
-                </div>
-              </section>
-            )}
-
-            {activity.length > 0 && (
-              <section>
-                <SectionLabel>Recent activity</SectionLabel>
-                <div className="mt-3">
-                  <RecentActivityStrip events={activity} />
-                </div>
-              </section>
-            )}
-
-            {completedCourses.length > 0 && (
-              <section>
-                <SectionLabel>Completed courses</SectionLabel>
-                <div className="mt-3">
-                  <CompletedGrid courses={completedCourses} />
-                </div>
-              </section>
-            )}
-          </>
+          <ProgressBrowser
+            paths={browserPaths}
+            inFlightCourses={inFlightCourses}
+            completedCourses={completedCourses}
+            labEntries={labRows}
+            labsById={labsById}
+            activity={activity}
+          />
         )}
       </div>
     </div>
