@@ -1,7 +1,6 @@
 import { getActivePathsAction } from "@/actions/learning-paths";
 import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
 import { PathCard } from "@/components/dashboard/PathCard";
-import { getPathIcon } from "@/components/dashboard/path-icons";
 import { SortDropdown } from "@/components/dashboard/SortDropdown";
 
 export default async function CareerPathPage() {
@@ -46,7 +45,8 @@ export default async function CareerPathPage() {
           {paths.map((path) => (
             <PathCard
               key={path.slug}
-              icon={getPathIcon(path.kind, path.icon)}
+              kind={path.kind}
+              icon={path.icon}
               title={path.title}
               description={path.description ?? ""}
               courseCount={path.course_count}

@@ -40,6 +40,10 @@ const careerPathIcons: Record<string, LucideIcon> = {
   mobile: Smartphone,
 };
 
+// Exported for client components that map a stored icon name back to its
+// Lucide component without a function call (which the lint rule rejects).
+export { skillPathIcons, careerPathIcons };
+
 // Falls back to BookOpen when admin picks no icon or an unknown value.
 export function getPathIcon(kind: PathKind, icon: string): LucideIcon {
   const map = kind === "skill" ? skillPathIcons : careerPathIcons;

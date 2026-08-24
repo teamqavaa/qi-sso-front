@@ -11,6 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { ContinueCardData } from "./types";
 
@@ -81,9 +87,16 @@ export function ContinueCard({
 
       <CardFooter className="justify-start gap-2 border-0 bg-transparent">
         <Button type="button" onClick={onPrimaryClick}>{data.primaryCta}</Button>
-        <Button type="button" variant="outline" onClick={onSecondaryClick}>
-          {data.secondaryCta}
-        </Button>
+        <TooltipProvider delayDuration={250}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button type="button" variant="outline" onClick={onSecondaryClick}>
+                {data.secondaryCta}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{data.description}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </CardFooter>
     </Card>
   );

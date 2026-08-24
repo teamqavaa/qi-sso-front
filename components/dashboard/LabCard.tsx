@@ -1,7 +1,15 @@
+"use client";
+
 import type { Lab } from "@/types/lab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Monochrome intensity instead of color: outline = untouched, secondary = in
 // flight, filled = done. Keeps the card inside the neutral dashboard palette.
@@ -39,41 +47,48 @@ export default function LabCard({
   const showProgress = labStatus === "in_progress" && totalSteps > 0;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-5 flex items-center justify-between gap-4 group">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2 mb-3">
-          <Badge variant="outline" className="text-muted-foreground">
-            {lab.language}
-          </Badge>
-          <Badge variant="outline" className="text-muted-foreground">
-            {lab.difficulty}
-          </Badge>
-        </div>
-        <p className="text-sm font-medium text-foreground leading-snug mb-3 truncate">
-          {lab.title}
-        </p>
+    <TooltipProvider delayDuration={250}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="bg-card rounded-xl border border-border p-5 flex items-center justify-between gap-4 group">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="outline" className="text-muted-foreground">
+                  {lab.language}
+                </Badge>
+                <Badge variant="outline" className="text-muted-foreground">
+                  {lab.difficulty}
+                </Badge>
+              </div>
+              <p className="text-sm font-medium text-foreground leading-snug mb-3 truncate">
+                {lab.title}
+              </p>
 
-        {showProgress && (
-          <div className="mb-3">
-            <Progress value={progressPercent} className="mb-1" />
-            <p className="text-[10px] text-muted-foreground">
-              {completedSteps}/{totalSteps} steps
-            </p>
+              {showProgress && (
+                <div className="mb-3">
+                  <Progress value={progressPercent} className="mb-1" />
+                  <p className="text-[10px] text-muted-foreground">
+                    {completedSteps}/{totalSteps} steps
+                  </p>
+                </div>
+              )}
+
+              <Badge variant={statusVariants[labStatus]}>{statusLabels[labStatus]}</Badge>
+            </div>
+
+            <Button asChild size="sm" className="flex-shrink-0">
+              <a
+                href={`http://localhost:3001/labs/${lab.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {buttonLabels[labStatus]}
+              </a>
+            </Button>
           </div>
-        )}
-
-        <Badge variant={statusVariants[labStatus]}>{statusLabels[labStatus]}</Badge>
-      </div>
-
-      <Button asChild size="sm" className="flex-shrink-0">
-        <a
-          href={`http://localhost:3001/labs/${lab.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {buttonLabels[labStatus]}
-        </a>
-      </Button>
-    </div>
+        </TooltipTrigger>
+        <TooltipContent>{lab.description}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
