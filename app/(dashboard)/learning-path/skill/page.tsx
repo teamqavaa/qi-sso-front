@@ -1,4 +1,5 @@
 import { getActivePathsAction } from "@/actions/learning-paths";
+import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
 import { PathCard } from "@/components/dashboard/PathCard";
 import { getPathIcon } from "@/components/dashboard/path-icons";
 
@@ -7,6 +8,13 @@ export default async function SkillPathPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-8 py-10">
+      <PageBreadcrumbs
+        className="mb-6"
+        items={[
+          { label: "Learning Path", href: "/learning-path" },
+          { label: "Skill Path", href: "/learning-path/skill" },
+        ]}
+      />
       <header className="flex items-end justify-between gap-4 border-b border-border pb-6">
         <div className="max-w-[60ch]">
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">

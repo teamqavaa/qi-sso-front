@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { getActivePathsAction } from "@/actions/learning-paths";
 import { getMyPathProgressAction } from "@/actions/course-progress";
@@ -11,6 +12,7 @@ import {
 } from "@/components/dashboard/path-detail/SidebarCard";
 import { PathIconBadge } from "@/components/dashboard/path-detail/PathIconBadge";
 import { getPathIcon } from "@/components/dashboard/path-icons";
+import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
 import { buildProgressMap, deriveSteps } from "@/lib/path-status";
 
 // One detail view for every path kind; routes only pick the kind.
@@ -32,9 +34,15 @@ export default async function PathDetailView({
     notFound();
   }
 
+  const crumbs = [
+    { label: "Learning Path", href: "/learning-path" },
+    { label: kind === "career" ? "Career Path" : "Skill Path", href: `/learning-path/${kind}` },
+    { label: summary.title, href: `/learning-path/${kind}/${slug}` },
+  ];
+
   const { detail } = await getPathDetailAction(summary.id);
   if (!detail) {
-    return <ComingSoon />;
+    return <ComingSoon breadcrumbs={<PageBreadcrumbs className="mb-6" items={crumbs} />} />;
   }
 
   const { progress } = await getMyPathProgressAction(slug);
@@ -56,6 +64,7 @@ export default async function PathDetailView({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-8 py-10">
+      <PageBreadcrumbs className="mb-6" items={crumbs} />
       {/* Header */}
       <PathIconBadge icon={getPathIcon(detail.kind, detail.icon)} />
       <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -129,9 +138,14 @@ export default async function PathDetailView({
   );
 }
 
-function ComingSoon() {
+function ComingSoon({
+  breadcrumbs,
+}: {
+  breadcrumbs?: ReactNode;
+}) {
   return (
     <div className="mx-auto w-full max-w-5xl px-8 py-10">
+      {breadcrumbs}
       <div className="rounded-xl border border-zinc-200 bg-card p-6 text-sm text-muted-foreground">
         This path&apos;s curriculum is coming soon.
       </div>

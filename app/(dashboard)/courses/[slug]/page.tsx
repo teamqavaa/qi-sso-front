@@ -7,6 +7,7 @@ import {
   getCoursePathContextAction,
 } from "@/actions/courses";
 import { getMyCourseProgressAction } from "@/actions/course-progress";
+import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
 import ChecklistGrid from "@/components/dashboard/course-detail/ChecklistGrid";
 import CourseTabs, { type CourseTab } from "@/components/dashboard/course-detail/CourseTabs";
 import CurriculumSummaryBar from "@/components/dashboard/course-detail/CurriculumSummaryBar";
@@ -159,6 +160,13 @@ export default async function CourseDetailPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-8 py-10">
+      <PageBreadcrumbs
+        className="mb-6"
+        items={[
+          { label: "Courses", href: "/courses" },
+          { label: summary.title, href: `/courses/${slug}` },
+        ]}
+      />
       <header>
         <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
           <span>{summary.level}</span>
