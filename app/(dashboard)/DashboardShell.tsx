@@ -240,8 +240,16 @@ function Header() {
   const { user } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSigningOut, startSignOut] = useTransition();
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
   const initials = getInitials(user?.display_name || user?.full_name);
+
+  function submitSearch(event: React.FormEvent) {
+    event.preventDefault();
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return;
+    router.push(`/courses?q=${encodeURIComponent(trimmed)}`);
+  }
 
   return (
     <header
@@ -272,8 +280,8 @@ function Header() {
           </SheetContent>
         </Sheet>
 
-        {/* Search is decorative and too wide for small screens, so it hides below md. */}
-        <div className="relative hidden w-64 md:block">
+        {/* Search routes into the courses catalog; too wide for small screens. */}
+        <form onSubmit={submitSearch} className="relative hidden w-64 md:block">
           <Search
             size={14}
             strokeWidth={1.5}
@@ -281,11 +289,13 @@ function Header() {
           />
           <Input
             type="search"
-            placeholder="Search labs, courses, skills..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search courses and paths..."
             aria-label="Search"
             className="h-8 rounded-full border-transparent bg-zinc-100 pl-8 text-sm"
           />
-        </div>
+        </form>
         <Button
           variant="outline"
           size="sm"
