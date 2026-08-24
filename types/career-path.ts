@@ -1,3 +1,7 @@
+import type { Course } from "@/types/course";
+
+export type PathKind = "skill" | "career";
+
 export type CareerPathIconName =
   | "backend"
   | "frontend"
@@ -16,15 +20,33 @@ export type SkillPathIconName =
   | "testing"
   | "security";
 
-export type PathBase = {
-  slug: string;
-  title: string;
-  description: string;
-  courseCount: number;
-  weekCount: number;
-  href: string;
+export type PathBullet = {
+  id: number;
+  order: number;
+  content: string;
 };
 
-export type CareerPath = PathBase & { icon: CareerPathIconName };
+// Mirrors the LearningPath model in courses-api.
+export type LearningPath = {
+  id: number;
+  kind: PathKind;
+  title: string;
+  slug: string;
+  description: string | null;
+  icon: string;
+  duration_weeks: number;
+  pace: string;
+  includes_certificate: boolean;
+  order: number;
+  is_active: boolean;
+  course_count: number;
+  created_at: string;
+  updated_at: string;
+};
 
-export type SkillPath = PathBase & { icon: SkillPathIconName };
+// Payload of GET /api/learning-paths/{id}/detail/.
+export type LearningPathDetail = LearningPath & {
+  outcomes: PathBullet[];
+  prerequisites: PathBullet[];
+  courses: Course[];
+};
