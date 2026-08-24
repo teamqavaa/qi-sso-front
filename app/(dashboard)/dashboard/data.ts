@@ -1,4 +1,6 @@
 import type { StatsData, WeekDay } from "@/actions/stats";
+import type { CourseStatsData } from "@/actions/course-stats";
+import type { ContinueSectionData } from "@/components/dashboard/student/types";
 import type {
   StreakData,
   StreakDay,
@@ -18,31 +20,37 @@ export const DEFAULT_DASHBOARD_DATA: StudentDashboardData = {
     ctaLabel: "Start now",
   },
   stats: [
-    { label: "Labs completed", value: "27", meta: "+3 this week" },
-    { label: "Hours practiced", value: "84.5", meta: "6.2 hrs this week" },
-    { label: "Current streak", value: "5 days", meta: "Best: 12 days" },
+    { label: "Paths completed", value: "0", meta: "0 paths started" },
+    { label: "Courses completed", value: "0", meta: "0 in progress now" },
+    { label: "Labs completed", value: "27", meta: "0 active days this week" },
+    { label: "Hours practiced", value: "84.5h", meta: "~1.2h per lab" },
+    { label: "Current streak", value: "0 days", meta: "" },
   ],
-  continueCard: {
-    tags: ["Lab", "Intermediate", "API"],
-    title: "Building Your First REST Integration",
-    description:
-      "Design an endpoint, model the payloads, and wire a client to talk to your service. This module walks through the full request lifecycle.",
-    progress: 58,
-    progressLabel: "Module 4 of 7",
-    meta: [
-      { icon: "clock", text: "45 min left" },
-      { icon: "star", text: "120 XP on completion" },
-      { icon: "calendar", text: "Last opened yesterday" },
+  continueSection: {
+    kind: "active",
+    cardHref: "/courses/building-your-first-rest-integration",
+    card: {
+      tags: ["Lab", "Intermediate", "API"],
+      title: "Building Your First REST Integration",
+      description:
+        "Design an endpoint, model the payloads, and wire a client to talk to your service. This module walks through the full request lifecycle.",
+      progress: 58,
+      progressLabel: "Module 4 of 7",
+      meta: [
+        { icon: "clock", text: "45 min left" },
+        { icon: "star", text: "120 XP on completion" },
+        { icon: "calendar", text: "Last opened yesterday" },
+      ],
+      primaryCta: "Continue",
+      secondaryCta: "Details",
+    },
+    rows: [
+      { title: "Data Cleaning with Pandas", kind: "Lab", progress: 40, href: "/courses" },
+      { title: "Version Control Essentials", kind: "Course", progress: 65, href: "/courses" },
+      { title: "Intro to Cloud Storage", kind: "Lab", progress: 20, href: "/courses" },
+      { title: "Spreadsheet Automation", kind: "Course", progress: 80, href: "/courses" },
     ],
-    primaryCta: "Continue",
-    secondaryCta: "Details",
   },
-  lessons: [
-    { title: "Data Cleaning with Pandas", kind: "Lab", progress: 40 },
-    { title: "Version Control Essentials", kind: "Course", progress: 65 },
-    { title: "Intro to Cloud Storage", kind: "Lab", progress: 20 },
-    { title: "Spreadsheet Automation", kind: "Course", progress: 80 },
-  ],
   streak: {
     summary: "4 of 7 days practiced",
     days: [
@@ -87,16 +95,6 @@ export const DEFAULT_DASHBOARD_DATA: StudentDashboardData = {
       locked: false,
     },
   ],
-  upNext: {
-    eyebrow: "Up next",
-    message:
-      "You finished Data Literacy Foundations. Ready to go further? Applied Analytics with SQL builds directly on what you just learned.",
-    courseTitle: "Applied Analytics with SQL",
-    courseDuration: "4 hrs 20 min",
-    courseTag: "Intermediate",
-    ctaLabel: "Start Applied Analytics with SQL",
-    dismissLabel: "Maybe later",
-  },
 };
 
 const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
@@ -117,24 +115,55 @@ function buildStreakData(week: WeekDay[]): StreakData {
   };
 }
 
-export function buildDashboardData(stats: StatsData): StudentDashboardData {
+// Every meta line derives from real backend fields; no decorative strings.
+export function buildDashboardData(
+  stats: StatsData,
+  continueSection: ContinueSectionData,
+  courseStats: CourseStatsData
+): StudentDashboardData {
+  const activeDays = stats.week.filter((day) => day.practiced).length;
+  const today = stats.week.find((day) => day.is_today);
+  const hoursPerLab =
+    stats.labs_completed > 0 ? stats.hours_practiced / stats.labs_completed : 0;
+
   return {
     ...DEFAULT_DASHBOARD_DATA,
     // The stat cards always show real numbers; zero is a valid, truthful value.
     stats: [
       {
-        ...DEFAULT_DASHBOARD_DATA.stats[0],
+        label: "Paths completed",
+        value: String(courseStats.paths_completed),
+        meta: `${courseStats.paths_started} ${courseStats.paths_started === 1 ? "path" : "paths"} started`,
+      },
+      {
+        label: "Courses completed",
+        value: String(courseStats.courses_completed),
+        meta: `${courseStats.courses_in_progress} in progress now`,
+      },
+      {
+        label: "Labs completed",
         value: String(stats.labs_completed),
+        meta: `${activeDays} active ${activeDays === 1 ? "day" : "days"} this week`,
       },
       {
-        ...DEFAULT_DASHBOARD_DATA.stats[1],
-        value: String(stats.hours_practiced),
+        label: "Hours practiced",
+        value: `${stats.hours_practiced}h`,
+        meta: hoursPerLab > 0 ? `~${hoursPerLab.toFixed(1)}h per lab` : "",
       },
       {
-        ...DEFAULT_DASHBOARD_DATA.stats[2],
-        value: `${stats.current_streak} days`,
+        label: "Current streak",
+        value:
+          stats.current_streak === 1
+            ? "1 day"
+            : `${stats.current_streak} days`,
+        meta: today
+          ? today.practiced
+            ? "Practiced today"
+            : "Practice today to keep it"
+          : "",
       },
     ],
     streak: buildStreakData(stats.week),
+    continueSection,
   };
 }

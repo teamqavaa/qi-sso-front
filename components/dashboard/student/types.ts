@@ -31,7 +31,38 @@ export type LessonRowData = {
   title: string;
   kind: string;
   progress: number;
+  href: string;
 };
+
+// Backend-picked next step shown in the continue section's empty state.
+export type FeaturedRecommendationData = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  reason: string;
+  href: string;
+  ctaLabel: string;
+};
+
+export type CourseSuggestionData = {
+  title: string;
+  kind: string;
+  duration: string;
+  href: string;
+};
+
+// Wired to courses-api progress rows: active shows the newest-touched course,
+// empty offers the backend recommendation plus random untouched starters.
+export type ContinueSectionData =
+  | { kind: "active"; card: ContinueCardData; cardHref: string; rows: LessonRowData[] }
+  | {
+      kind: "empty";
+      featured: FeaturedRecommendationData | null;
+      title: string;
+      message: string;
+      ctaLabel: string;
+      suggestions: CourseSuggestionData[];
+    };
 
 export type StreakDayState = "done" | "today" | "upcoming";
 
@@ -55,24 +86,12 @@ export type AchievementBadgeData = {
   locked: boolean;
 };
 
-export type UpNextData = {
-  eyebrow: string;
-  message: string;
-  courseTitle: string;
-  courseDuration: string;
-  courseTag: string;
-  ctaLabel: string;
-  dismissLabel: string;
-};
-
 export type StudentDashboardData = {
   greetingName: string;
   greetingSubtitle: string;
   banner: NotificationBannerData;
   stats: Stat[];
-  continueCard: ContinueCardData;
-  lessons: LessonRowData[];
+  continueSection: ContinueSectionData;
   streak: StreakData;
   achievements: AchievementBadgeData[];
-  upNext: UpNextData;
 };

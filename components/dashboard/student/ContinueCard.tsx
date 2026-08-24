@@ -23,9 +23,13 @@ const metaIconMap = {
 export function ContinueCard({
   data,
   className,
+  onPrimaryClick,
+  onSecondaryClick,
 }: {
   data: ContinueCardData;
   className?: string;
+  onPrimaryClick?: () => void;
+  onSecondaryClick?: () => void;
 }) {
   return (
     <Card className={cn("rounded-2xl bg-white", className)}>
@@ -76,8 +80,10 @@ export function ContinueCard({
       </CardContent>
 
       <CardFooter className="justify-start gap-2 border-0 bg-transparent">
-        <Button>{data.primaryCta}</Button>
-        <Button variant="outline">{data.secondaryCta}</Button>
+        <Button type="button" onClick={onPrimaryClick}>{data.primaryCta}</Button>
+        <Button type="button" variant="outline" onClick={onSecondaryClick}>
+          {data.secondaryCta}
+        </Button>
       </CardFooter>
     </Card>
   );
