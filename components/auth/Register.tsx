@@ -1,16 +1,12 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-// Importations des composants shadcn/ui
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import Social from "./Social";
-import FooterTab from "./FooterTab";
 
-// Importation de votre Server Action
 import { registerAction } from "@/actions/auth";
 
 interface RegisterProps {
@@ -19,8 +15,16 @@ interface RegisterProps {
 
 export default function Register({ onSwitchToLogin }: RegisterProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  // 1. Récupération de TOUS les paramètres OAuth2 / PKCE transmis par l'App A
+  const clientId = searchParams.get("client_id");
+  const redirectUri = searchParams.get("redirect_uri");
+  const codeChallenge = searchParams.get("code_challenge");
+  const codeChallengeMethod = searchParams.get("code_challenge_method") || "S256";
+  const state = searchParams.get("state");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -28,14 +32,16 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
 
     const formData = new FormData(event.currentTarget);
 
-    // Déclenchement sécurisé de la Server Action avec useTransition
     startTransition(async () => {
       const result = await registerAction(formData);
 
       if (result?.error) {
         setError(result.error);
+      } else if (result?.redirectTo) {
+        // Redirection SSO vers l'App A avec le code OAuth2
+        window.location.href = result.redirectTo;
       } else if (result?.success) {
-        // Redirection vers le dashboard après la connexion automatique réussie
+        // Redirection classique vers le dashboard SSO
         router.push("/dashboard");
         router.refresh();
       }
@@ -54,7 +60,7 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
             Create an account
           </p>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-            Select your authentication method or use your login details.{" "}
+            Select your authentication method or use your login details.
           </p>
         </div>
 
@@ -65,22 +71,28 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
         <div className="relative flex items-center py-2">
           <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
           <span className="flex-shrink mx-4 text-xs uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium">
-            Or continue with{" "}
+            Or continue with
           </span>
           <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
         </div>
 
-        {/* Bloc d'affichage des erreurs renvoyées par Django */}
+        {/* Bloc d'erreur */}
         {error && (
           <div className="p-3 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/30 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-900">
             {error}
           </div>
         )}
 
-        {/* Formulaire Standard relié au handler */}
+        {/* Formulaire Standard */}
         <form className="space-y-5" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          {/* 2. Injection des champs masqués PKCE et State indispensables pour Django */}
+          {clientId && <input type="hidden" name="client_id" value={clientId} />}
+          {redirectUri && <input type="hidden" name="redirect_uri" value={redirectUri} />}
+          {codeChallenge && <input type="hidden" name="code_challenge" value={codeChallenge} />}
+          {codeChallengeMethod && <input type="hidden" name="code_challenge_method" value={codeChallengeMethod} />}
+          {state && <input type="hidden" name="state" value={state} />}
 
+          <div className="space-y-4">
             {/* Champ Full Name */}
             <div className="grid gap-1.5">
               <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">
@@ -88,7 +100,7 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
               </Label>
               <Input
                 id="name"
-                name="name" // Crucial pour le FormData
+                name="name"
                 type="text"
                 required
                 className="h-11"
@@ -96,14 +108,14 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
               />
             </div>
 
-            {/* Champ phone */}
+            {/* Champ Phone */}
             <div className="grid gap-1.5">
               <Label htmlFor="phone" className="text-slate-700 dark:text-slate-300">
                 Phone
               </Label>
               <Input
                 id="phone"
-                name="phone" // Crucial pour le FormData
+                name="phone"
                 type="text"
                 className="h-11"
                 placeholder="+001 2245 67 980 35"
@@ -117,7 +129,7 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
               </Label>
               <Input
                 id="email"
-                name="email" // Crucial pour le FormData
+                name="email"
                 type="email"
                 autoComplete="email"
                 className="h-11"
@@ -134,7 +146,7 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
               </div>
               <Input
                 id="password"
-                name="password" // Crucial pour le FormData
+                name="password"
                 type="password"
                 autoComplete="new-password"
                 required
@@ -144,22 +156,11 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
             </div>
           </div>
 
-          {/* Options de mémorisation */}
-          <div className="flex items-center space-x-2">
-            <Checkbox id="remember-me" name="remember-me" />
-            <label
-              htmlFor="remember-me"
-              className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 select-none"
-            >
-              Remember me
-            </label>
-          </div>
-
-          {/* Bouton de soumission adaptatif avec état de chargement */}
+          {/* Bouton de soumission */}
           <Button
             type="submit"
             disabled={isPending}
-            className="w-full h-11 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-400 text-white font-semibold transition active:scale-[0.99] cursor-pointer flex items-center justify-center"
+            className="w-full h-11 bg-blue-400 hover:bg-blue-500 disabled:bg-blue-400 text-white font-semibold transition active:scale-[0.99] cursor-pointer flex items-center justify-center"
           >
             {isPending ? "Creating account..." : "Secure Sign Up"}
           </Button>
@@ -169,6 +170,7 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
         <p className="text-center text-xs text-slate-500 dark:text-slate-500 lg:text-left">
           Do you already have an account?
           <button
+            type="button"
             onClick={onSwitchToLogin}
             className="ml-2 font-semibold underline hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
           >
