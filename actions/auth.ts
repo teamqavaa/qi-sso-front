@@ -169,9 +169,16 @@ export async function getMeAction() {
 }
 
 export async function clearAuthCookies() {
-  const cookieStore = await cookies();
-  cookieStore.delete("access_token");
-  cookieStore.delete("refresh_token");
+  // Next.js only allows cookie writes inside Server Actions or Route
+  // Handlers; the dashboard layout calls this during render, so failures
+  // must never crash the request.
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete("access_token");
+    cookieStore.delete("refresh_token");
+  } catch {
+    // Render-phase call: skip cleanup, the redirect below still runs.
+  }
 }
 
 export async function logoutAction() {
