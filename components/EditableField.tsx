@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Check, Pencil, X } from "lucide-react";
 
 type EditableFieldProps = {
@@ -17,14 +17,18 @@ export default function EditableField({
   onSave,
 }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
+  // Track the prop the draft was seeded from, so an external value change
+  // resets the field. React applies this during render; no effect needed.
+  const [lastSeenValue, setLastSeenValue] = useState(value ?? "");
   const [draftValue, setDraftValue] = useState(value ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  useEffect(() => {
+  if (lastSeenValue !== (value ?? "")) {
+    setLastSeenValue(value ?? "");
     setDraftValue(value ?? "");
-  }, [value]);
+  }
 
   async function handleSave() {
     setIsSaving(true);

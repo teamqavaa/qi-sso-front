@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Social from "./Social";
-import FooterTab from "./FooterTab";
 
 // Importation de votre Server Action
 import { registerAction } from "@/actions/auth";

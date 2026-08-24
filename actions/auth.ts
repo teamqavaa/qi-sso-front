@@ -56,7 +56,7 @@ export async function loginAction(formData: FormData) {
     });
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Unable to connect to the authentication server." };
   }
 }

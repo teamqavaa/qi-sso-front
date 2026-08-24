@@ -28,7 +28,7 @@ export default function AuthHome() {
           </p>
           <div className="mt-8 border-t border-slate-800 pt-6 text-xs text-slate-400">
             Security Advisory: Ensure that the URL in your address bar
-            corresponds to your organization's official domain.{" "}
+            corresponds to your organization&apos;s official domain.{" "}
           </div>
         </div>
       </div>
