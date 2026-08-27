@@ -111,7 +111,7 @@ function buildFeaturedRecommendation(
   if (recommendation.path) {
     const path = recommendation.path;
     return {
-      eyebrow: path.kind === "career" ? "Career path" : "Skill path",
+      eyebrow: path.kind === "career" ? "Career" : "Skill",
       title: path.title,
       description: path.description,
       reason: recommendation.reason,

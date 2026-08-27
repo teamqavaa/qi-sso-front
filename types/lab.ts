@@ -5,5 +5,7 @@ export type Lab = {
   language: string;
   difficulty: string;
   status: string;
+  skill: string | null;
+  skill_slug: string;
   created_at: string;
 };

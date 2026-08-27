@@ -40,10 +40,10 @@ import styles from "@/components/dashboard/Dashboard.module.css";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", iconName: "LayoutDashboard" as const },
-  { id: "learning-path", label: "Learning Path", iconName: "Route" as const },
+  { id: "learning-path", label: "My Learning", iconName: "Route" as const },
   { id: "labs", label: "My Labs", iconName: "FlaskConical" as const },
-  { id: "courses", label: "Courses", iconName: "BookOpen" as const },
-  { id: "progress", label: "Progress", iconName: "BarChart2" as const },
+  { id: "courses", label: "My Courses", iconName: "BookOpen" as const },
+  { id: "progress", label: "My Progress", iconName: "BarChart2" as const },
   { id: "settings", label: "Settings", iconName: "Settings" as const },
 ];
 
@@ -57,8 +57,8 @@ const navIconMap = {
 };
 
 const learningPathItems = [
-  { path: "/learning-path/skill", label: "Skill Path" },
-  { path: "/learning-path/career", label: "Career Path" },
+  { path: "/learning-path/skill", label: "Skill" },
+  { path: "/learning-path/career", label: "Career" },
 ];
 
 function getInitials(name: string | null | undefined): string {

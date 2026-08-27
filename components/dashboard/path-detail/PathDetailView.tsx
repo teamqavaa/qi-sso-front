@@ -35,8 +35,7 @@ export default async function PathDetailView({
   }
 
   const crumbs = [
-    { label: "Learning Path", href: "/learning-path" },
-    { label: kind === "career" ? "Career Path" : "Skill Path", href: `/learning-path/${kind}` },
+    { label: kind === "career" ? "Career" : "Skill", href: `/learning-path/${kind}` },
     { label: summary.title, href: `/learning-path/${kind}/${slug}` },
   ];
 

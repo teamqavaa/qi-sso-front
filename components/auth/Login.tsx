@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Social from "./Social";
 import { loginAction } from "@/actions/auth";
-import { safeReturnPath } from "@/lib/sso";
+import { SSO_ADMIN_ORIGIN, safeReturnPath } from "@/lib/sso";
 
 interface LoginProps {
   onSwitchToRegister: () => void;
@@ -24,10 +24,15 @@ export default function Login({onSwitchToRegister}: LoginProps) {
       const result = await loginAction(formData);
       if (result?.error) setError(result.error);
       if (result?.success) {
-        // Return to the page the user came from (set by the practice-lab
-        // proxy); fall back to the dashboard when the portal was opened directly.
+        // An explicit return path (deep link from another app) always wins.
         const next = new URLSearchParams(window.location.search).get("next");
-        router.push(safeReturnPath(next));
+        if (next) {
+          router.push(safeReturnPath(next));
+          return;
+        }
+        // Otherwise route by role: staff land in the central admin,
+        // students in their dashboard.
+        router.push(result.isStaff ? `${SSO_ADMIN_ORIGIN}/admin` : "/dashboard");
       }
     });
   };

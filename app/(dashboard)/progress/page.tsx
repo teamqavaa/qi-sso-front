@@ -21,7 +21,7 @@ export default async function ProgressPage() {
   const [coursesRes, pathsRes, progressRes, courseStats, labEntries, labStats, labsRes] =
     await Promise.all([
       getActiveCoursesAction(),
-      getActivePathsAction(),
+      getActivePathsAction("career"),
       getMyProgressAction(),
       getMyCourseStatsAction(),
       getProgressAction(),

@@ -55,12 +55,28 @@ export async function loginAction(formData: FormData) {
       maxAge: 60 * 60 * 24 * 7, // 7 jours
     });
 
-    return { success: true };
+    // Resolve the role right away so the client can route staff to the
+    // central admin and students to their dashboard.
+    let isStaff = false;
+    try {
+      const meResponse = await fetch("http://127.0.0.1:8000/api/users/me/", {
+        headers: { Authorization: `Bearer ${data.access}` },
+        cache: "no-store",
+      });
+      if (meResponse.ok) {
+        const profile = await meResponse.json();
+        isStaff = Boolean(profile?.is_staff);
+      }
+    } catch {
+      // Role lookup failure must not block login; the student dashboard is
+      // the safe default and admin APIs still enforce staff server-side.
+    }
+
+    return { success: true, isStaff };
   } catch {
     return { error: "Unable to connect to the authentication server." };
   }
 }
-
 
 export async function registerAction(formData: FormData) {
   // 1. Récupération des champs distincts du formulaire Next.js

@@ -1,4 +1,4 @@
-import PathDetailView from "@/components/dashboard/path-detail/PathDetailView";
+import SkillDetailView from "@/components/dashboard/path-detail/SkillDetailView";
 
 export default async function SkillPathDetailPage({
   params,
@@ -6,5 +6,5 @@ export default async function SkillPathDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return <PathDetailView kind="skill" slug={slug} />;
+  return <SkillDetailView slug={slug} />;
 }

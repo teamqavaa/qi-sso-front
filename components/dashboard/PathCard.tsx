@@ -23,6 +23,7 @@ export function PathCard({
   title,
   description,
   courseCount,
+  labCount = 0,
   weekCount,
   href,
   className,
@@ -32,6 +33,7 @@ export function PathCard({
   title: string;
   description: string;
   courseCount: number;
+  labCount?: number;
   weekCount: number;
   href: string;
   className?: string;
@@ -65,11 +67,15 @@ export function PathCard({
             </div>
 
             <p className="mt-auto pt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              {courseCount} COURSES{weekCount > 0 ? ` · ${weekCount} WEEKS` : ""}
+              {kind === "skill"
+                ? `${labCount} LAB${labCount === 1 ? "" : "S"}`
+                : `${courseCount} COURSES${weekCount > 0 ? ` · ${weekCount} WEEKS` : ""}`}
             </p>
 
             <Button asChild variant="default" className="w-full rounded-full py-2.5">
-              <Link href={href}>View Path</Link>
+              <Link href={href}>
+                {kind === "skill" ? "Learn Skill" : "View Path"}
+              </Link>
             </Button>
           </div>
         </TooltipTrigger>
