@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   LayoutDashboard,
   FlaskConical,
@@ -17,7 +17,7 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { UserProvider, useUser } from "@/context/UserContext";
 import type { User } from "@/types/user";
-import { logoutAction } from "@/actions/auth";
+import { getMeAction, logoutAction, clearAuthCookies } from "@/actions/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -347,15 +347,46 @@ function Header() {
   );
 }
 
+// Populates the shared user profile after first paint instead of blocking the
+// server render on a /users/me/ round-trip for every navigation. An invalid or
+// expired token drops the cookies and returns the user to login.
+function UserHydrator() {
+  const { user, updateUser } = useUser();
+  const router = useRouter();
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (startedRef.current || user) return;
+    startedRef.current = true;
+
+    let cancelled = false;
+    getMeAction().then((result) => {
+      if (cancelled) return;
+      if (result.user) {
+        updateUser(result.user);
+      } else {
+        clearAuthCookies().then(() => router.replace("/"));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, updateUser, router]);
+
+  return null;
+}
+
 export default function DashboardShell({
   initialUser,
   children,
 }: {
-  initialUser: User;
+  initialUser: User | null;
   children: React.ReactNode;
 }) {
   return (
     <UserProvider initialUser={initialUser}>
+      <UserHydrator />
       <div className={cn("flex h-dvh w-full overflow-hidden bg-zinc-50", styles.container)}>
         {/* The drawer in Header replaces this sidebar below lg. */}
         <Sidebar className="hidden lg:flex" />

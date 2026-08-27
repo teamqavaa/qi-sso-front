@@ -1,5 +1,5 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getMeAction, clearAuthCookies } from "@/actions/auth";
 import DashboardShell from "./DashboardShell";
 
 export default async function DashboardLayout({
@@ -7,13 +7,13 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const result = await getMeAction();
-
-  if (!result.user) {
-    await clearAuthCookies();
-    // TODO: Add token refresh logic here — call refresh endpoint if access_token is expired
+  // Cheap local gate: a network round-trip on every navigation is what made
+  // page clicks feel slow. Cookie presence is enough here to allow the shell
+  // to render; an expired token is caught client-side and sent back to login.
+  const cookieStore = await cookies();
+  if (!cookieStore.get("access_token")?.value) {
     redirect("/");
   }
 
-  return <DashboardShell initialUser={result.user}>{children}</DashboardShell>;
+  return <DashboardShell initialUser={null}>{children}</DashboardShell>;
 }
