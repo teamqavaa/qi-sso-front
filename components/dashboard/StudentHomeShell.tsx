@@ -209,14 +209,20 @@ function HomeUserHydrator() {
     startedRef.current = true;
 
     let cancelled = false;
-    getMeAction().then((result) => {
-      if (cancelled) return;
-      if (result.user) {
-        updateUser(result.user);
-      } else {
-        clearAuthCookies().then(() => router.replace("/"));
-      }
-    });
+    getMeAction()
+      .then((result) => {
+        if (cancelled) return;
+        if (result.user) {
+          updateUser(result.user);
+        } else {
+          clearAuthCookies().then(() => router.replace("/"));
+        }
+      })
+      .catch(() => {
+        // A transient failure must not pin the shell to a null user forever;
+        // reset the guard so the next render retries.
+        startedRef.current = false;
+      });
 
     return () => {
       cancelled = true;

@@ -1,24 +1,27 @@
+import { redirect } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { getMeAction } from "@/actions/auth";
 
-// TODO: Replace the mock profile and preference values with the settings
-// endpoints once they exist. Every field below is placeholder data.
-const MOCK_PROFILE = {
-  displayName: "Amina Diallo",
-  email: "amina.diallo@example.com",
-  country: "Senegal",
-  language: "English",
-};
-
+// Preferences have no backend endpoint yet; every value below is placeholder.
 const MOCK_PREFERENCES = [
   { label: "Weekly goal", value: "5 hours" },
   { label: "Email reminders", value: "On" },
   { label: "Public profile", value: "Off" },
 ];
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const { user } = await getMeAction();
+
+  if (!user) {
+    redirect("/");
+  }
+
+  // Django's /users/me/ returns email; the shared User type still omits it.
+  const email = user.email ?? "";
+
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
       <PageBreadcrumbs
@@ -39,19 +42,19 @@ export default function SettingsPage() {
         <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm">
             Display name
-            <Input defaultValue={MOCK_PROFILE.displayName} />
+            <Input defaultValue={user.display_name || user.full_name || ""} />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
             Email
-            <Input defaultValue={MOCK_PROFILE.email} type="email" />
+            <Input defaultValue={email} type="email" />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
             Country
-            <Input defaultValue={MOCK_PROFILE.country} />
+            <Input defaultValue={user.country || ""} />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
             Language
-            <Input defaultValue={MOCK_PROFILE.language} />
+            <Input defaultValue={user.language || ""} />
           </label>
         </div>
       </section>

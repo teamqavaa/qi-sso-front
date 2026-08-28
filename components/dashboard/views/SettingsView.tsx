@@ -1,18 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import EditableField from "@/components/EditableField";
 import { useUser } from "@/context/UserContext";
 import { updateProfileAction } from "@/actions/auth";
+import type { User } from "@/types/user";
 
 type EditableFields = "full_name" | "display_name" | "bio" | "birth_date" | "city" | "country" | "language";
 
-export default function SettingsView() {
-  const { user, updateUser } = useUser();
+export default function SettingsView({ initialUser }: { initialUser: User | null }) {
+  const { user: contextUser, updateUser } = useUser();
+  // The page passes the server-fetched profile, so the form renders before
+  // client hydration. Local state keeps edits visible while context settles.
+  const [profile, setProfile] = useState<User | null>(initialUser);
+
+  const user = profile ?? contextUser;
 
   if (!user) {
     return (
       <div className="px-8 py-10 max-w-2xl mx-auto w-full">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">
+          Could not load your profile. Please refresh the page.
+        </p>
       </div>
     );
   }
@@ -32,6 +41,9 @@ export default function SettingsView() {
       const result = await updateProfileAction(field, newValue);
       if (result.ok) {
         updateUser({ [field]: newValue });
+        setProfile((current) =>
+          current ? { ...current, [field]: newValue } : current
+        );
       }
       return result;
     };

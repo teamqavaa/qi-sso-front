@@ -25,7 +25,15 @@ export type StudentHomeRecommendation = {
   ctaLabel: string;
 };
 
+export type StudentHomeStat = {
+  label: string;
+  value: string;
+  meta: string;
+  icon: string;
+};
+
 export type StudentHomeData = {
+  stats: StudentHomeStat[];
   keepGoing: { title: string; kind: string; progress: number; href: string }[];
   recommendation: StudentHomeRecommendation | null;
   featuredCourses: StudentHomeCourse[];
