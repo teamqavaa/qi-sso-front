@@ -28,7 +28,7 @@ export function UserProvider({
 
   const updateUser = useCallback((partial: Partial<User>) => {
     setUser((currentUser) =>
-      currentUser ? { ...currentUser, ...partial } : currentUser,
+      currentUser ? { ...currentUser, ...partial } : (partial as User),
     );
   }, []);
 
