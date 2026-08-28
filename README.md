@@ -18,7 +18,6 @@ Five repos form the learning platform.
 
 Notes:
 
-- `Digital-Readiness-Lab` also has a student frontend. Its dev script defaults to port 3000.
 - The `pratice-lab` dev script pins port 3001. Run that app on port 3002 when the portal runs on 3001.
 
 ## What the portal does
@@ -41,7 +40,7 @@ Then the user goes to the contents-lab home page on port 3000.
 
 ## How the portal connects the apps
 
-- One cookie set signs the user into `contents-lab`, `pratice-lab`, and the DRL frontend.
+- One cookie set signs the user into `contents-lab` and `pratice-lab`.
 - `courses-api` validates the same token with the shared JWT secret.
 - The dashboard reads course data from `courses-api` (port 8001).
 - The dashboard reads labs and stats from the DRL backend (port 8000).
