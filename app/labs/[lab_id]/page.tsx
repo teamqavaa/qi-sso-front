@@ -22,7 +22,7 @@ export default function LabPage() {
           <div className="w-8 h-8 rounded-md bg-[#007bff] flex items-center justify-center">
             <FlaskConical size={16} className="text-white" />
           </div>
-          <span className="font-semibold text-gray-800">Digital Readiness Lab</span>
+          <span className="font-semibold text-gray-800">Qavaa</span>
         </div>
       </header>
 

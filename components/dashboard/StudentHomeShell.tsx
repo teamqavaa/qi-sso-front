@@ -53,16 +53,11 @@ function HomeSidebar({
           </div>
           {!collapsed && (
             <span className="text-xs font-semibold tracking-tight">
-              Digital Readiness Lab
+              Qavaa
             </span>
           )}
         </Link>
       </div>
-      {!collapsed && (
-        <p className="px-5 pb-5 pl-[4.25rem] text-[10px] uppercase tracking-widest text-white/40">
-          by Qavaa
-        </p>
-      )}
 
       <nav className="flex-1 px-3 py-2">
         {homeNavItems.map(({ href, label, icon: Icon }) => {
