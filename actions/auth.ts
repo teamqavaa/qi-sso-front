@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { SSO_PUBLIC_HOME_ORIGIN } from "@/lib/sso";
 
 export async function loginAction(formData: FormData) {
   // 1. On récupère la valeur du champ "identifier" de votre formulaire Next.js
@@ -201,7 +202,8 @@ export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete("access_token");
   cookieStore.delete("refresh_token");
-  redirect("/");
+  // Sign out returns to the public marketing homepage, not the SSO login form.
+  redirect(SSO_PUBLIC_HOME_ORIGIN);
 }
 
 export async function updateProfileAction(field: string, value: string) {

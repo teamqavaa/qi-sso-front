@@ -19,6 +19,7 @@ export default async function SkillDetailView({ slug }: { slug: string }) {
   }
 
   const crumbs = [
+    { label: "Tracks", href: "/learning-path" },
     { label: "Skill", href: "/learning-path/skill" },
     { label: skill.title, href: `/learning-path/skill/${skill.slug}` },
   ];

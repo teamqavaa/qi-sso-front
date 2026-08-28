@@ -1,5 +1,6 @@
 "use client"
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 import ssoImg from "@/images/ssoimage.jpg";
 import Register from "./auth/Register";
@@ -7,7 +8,11 @@ import Login from "./auth/Login";
 import { useState } from "react";
 
 export default function AuthHome() {
-    const [authMode, setAuthMode] = useState<"login" | "register">("login")
+    // A sign-up deep link from another app carries ?mode=register; start the
+    // portal on the register form instead of forcing login.
+    const searchParams = useSearchParams();
+    const initialMode = searchParams.get("mode") === "register" ? "register" : "login";
+    const [authMode, setAuthMode] = useState<"login" | "register">(initialMode)
   return (
     <div className="flex gap-5 w-full min-h-screen bg-slate-50 dark:bg-slate-50">
       <div className="relative hidden w-1/2 overflow-hidden bg-slate-950 lg:block">

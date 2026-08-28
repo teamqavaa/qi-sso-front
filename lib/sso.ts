@@ -3,6 +3,9 @@
 // these explicit allowlisted origins to block open-redirect attacks.
 export const SSO_RETURN_ORIGIN = process.env.SSO_RETURN_ORIGIN ?? "http://localhost:3001";
 export const SSO_ADMIN_ORIGIN = process.env.SSO_ADMIN_ORIGIN ?? "http://localhost:3000";
+// Public marketing homepage (contents-lab). Logout lands here rather than on the
+// SSO login page so a signed-out user sees the public site, not a form.
+export const SSO_PUBLIC_HOME_ORIGIN = process.env.SSO_PUBLIC_HOME_ORIGIN ?? "http://localhost:3000";
 
 const ALLOWED_RETURN_ORIGINS = new Set(
   [SSO_RETURN_ORIGIN, SSO_ADMIN_ORIGIN]
@@ -11,14 +14,15 @@ const ALLOWED_RETURN_ORIGINS = new Set(
 );
 
 export function safeReturnPath(next: string | null): string {
-  if (!next) return "/dashboard";
+  // Students land on their home page when no deep link applies.
+  if (!next) return "/home";
 
   // Same-app navigation stays internal.
   if (next.startsWith("/")) return next;
 
   try {
-    return ALLOWED_RETURN_ORIGINS.has(new URL(next).origin) ? next : "/dashboard";
+    return ALLOWED_RETURN_ORIGINS.has(new URL(next).origin) ? next : "/home";
   } catch {
-    return "/dashboard";
+    return "/home";
   }
 }

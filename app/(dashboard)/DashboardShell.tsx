@@ -13,8 +13,10 @@ import {
   ChevronDown,
   Menu,
   Route,
+  House,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { UserProvider, useUser } from "@/context/UserContext";
 import type { User } from "@/types/user";
 import { getMeAction, logoutAction, clearAuthCookies } from "@/actions/auth";
@@ -39,8 +41,9 @@ import { cn } from "@/lib/utils";
 import styles from "@/components/dashboard/Dashboard.module.css";
 
 const navItems = [
+  { id: "home", label: "Home", iconName: "House" as const },
   { id: "dashboard", label: "Dashboard", iconName: "LayoutDashboard" as const },
-  { id: "learning-path", label: "My Learning", iconName: "Route" as const },
+  { id: "learning-path", label: "Tracks", iconName: "Route" as const },
   { id: "labs", label: "My Labs", iconName: "FlaskConical" as const },
   { id: "courses", label: "My Courses", iconName: "BookOpen" as const },
   { id: "progress", label: "My Progress", iconName: "BarChart2" as const },
@@ -48,6 +51,7 @@ const navItems = [
 ];
 
 const navIconMap = {
+  House,
   LayoutDashboard,
   Route,
   FlaskConical,
@@ -76,9 +80,11 @@ function lowercase(value: string | null | undefined): string {
 
 function Sidebar({
   className,
+  collapsed = false,
   onNavigate,
 }: {
   className?: string;
+  collapsed?: boolean;
   onNavigate?: () => void;
 }) {
   const { user } = useUser();
@@ -98,35 +104,58 @@ function Sidebar({
   return (
     <aside
       className={cn(
-        "flex h-full w-56 flex-shrink-0 flex-col bg-zinc-950 text-white",
+        "flex h-full flex-shrink-0 flex-col bg-zinc-950 text-white transition-[width] duration-200",
+        collapsed ? "w-14" : "w-56",
         className
       )}
     >
-      <div className="flex items-center gap-2 px-5 pt-6 pb-4">
-        <div className="flex size-6 items-center justify-center rounded-md bg-white/10">
-          <FlaskConical size={13} strokeWidth={2} />
-        </div>
-        <span className="text-xs font-semibold tracking-tight">Digital Readiness Lab</span>
+      <div className="flex items-center gap-2 px-3 pt-6 pb-4">
+        {/* The logo is the home affordance, matching the student home page. */}
+        <Link
+          href="/home"
+          className="flex items-center gap-2 rounded-md outline-offset-2 hover:opacity-80 focus-visible:outline"
+          aria-label="Go to home"
+        >
+          <div className="flex size-6 flex-shrink-0 items-center justify-center rounded-md bg-white/10">
+            <FlaskConical size={13} strokeWidth={2} />
+          </div>
+          {!collapsed && (
+            <span className="text-xs font-semibold tracking-tight">
+              Digital Readiness Lab
+            </span>
+          )}
+        </Link>
       </div>
-      <p className="px-5 pb-5 pl-[4.25rem] text-[10px] uppercase tracking-widest text-white/40">
-        by Qavaa
-      </p>
+      {!collapsed && (
+        <p className="px-5 pb-5 pl-[4.25rem] text-[10px] uppercase tracking-widest text-white/40">
+          by Qavaa
+        </p>
+      )}
 
-      <div className="px-5 pb-5">
-        <div className="flex items-center gap-3 rounded-xl bg-white/10 p-3">
-          <Avatar className="size-10 bg-white">
-            <AvatarFallback className="bg-white text-zinc-950">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium leading-tight">
-              {user?.display_name || user?.full_name || "User"}
-            </p>
-            <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-white/60">
-              {location ? `${location} · ${lowercase(user?.language)}` : ""}
-            </p>
+      {!collapsed && (
+        <div className="px-5 pb-5">
+          <div className="flex items-center gap-3 rounded-xl bg-white/10 p-3">
+            <Avatar className="size-10 bg-white">
+              <AvatarFallback className="bg-white text-zinc-950">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium leading-tight">
+                {user?.display_name || user?.full_name || "User"}
+              </p>
+              <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-white/60">
+                {location ? `${location} · ${lowercase(user?.language)}` : ""}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+      {collapsed && (
+        <div className="flex justify-center px-3 pb-5">
+          <Avatar className="size-8 bg-white">
+            <AvatarFallback className="bg-white text-zinc-950">{initials}</AvatarFallback>
+          </Avatar>
+        </div>
+      )}
 
       <nav className="flex-1 overflow-y-auto px-3 py-2">
         {navItems.map(({ id, label, iconName }) => {
@@ -153,20 +182,26 @@ function Sidebar({
                   }
                   aria-expanded={isExpanded}
                   aria-current={isActive ? "page" : undefined}
-                  className={buttonClass}
+                  title={collapsed ? label : undefined}
+                  className={cn(
+                    buttonClass,
+                    collapsed && "justify-center px-0"
+                  )}
                 >
                   <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
-                  <span>{label}</span>
-                  <ChevronDown
-                    size={14}
-                    strokeWidth={1.5}
-                    className={cn(
-                      "ml-auto transition-transform",
-                      isExpanded && "rotate-180"
-                    )}
-                  />
+                  {!collapsed && <span>{label}</span>}
+                  {!collapsed && (
+                    <ChevronDown
+                      size={14}
+                      strokeWidth={1.5}
+                      className={cn(
+                        "ml-auto transition-transform",
+                        isExpanded && "rotate-180"
+                      )}
+                    />
+                  )}
                 </Button>
-                {isExpanded && (
+                {isExpanded && !collapsed && (
                   <div className="mb-0.5">
                     {learningPathItems.map((item) => {
                       const isSubActive = pathname === item.path;
@@ -207,16 +242,17 @@ function Sidebar({
                 onNavigate?.();
               }}
               aria-current={isActive ? "page" : undefined}
-              className={buttonClass}
+              title={collapsed ? label : undefined}
+              className={cn(buttonClass, collapsed && "justify-center px-0")}
             >
               <Icon size={16} strokeWidth={isActive ? 2 : 1.5} />
-              <span>{label}</span>
+              {!collapsed && <span>{label}</span>}
             </Button>
           );
         })}
       </nav>
 
-      <div className="px-3 pb-5">
+      <div className={cn("pb-5", collapsed ? "px-2" : "px-3")}>
         <Button
           type="button"
           variant="ghost"
@@ -226,17 +262,29 @@ function Sidebar({
             startSignOut(() => logoutAction());
           }}
           disabled={isSigningOut}
-          className="h-auto w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-white/70 hover:bg-white/10 hover:text-white"
+          title={collapsed ? "Sign out" : undefined}
+          className={cn(
+            "h-auto w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-white/70 hover:bg-white/10 hover:text-white",
+            collapsed && "justify-center px-0"
+          )}
         >
           <LogOut size={15} strokeWidth={1.5} />
-          <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
+          {!collapsed && (
+            <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
+          )}
         </Button>
       </div>
     </aside>
   );
 }
 
-function Header() {
+function Header({
+  collapsed,
+  onToggleCollapsed,
+}: {
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+}) {
   const { user } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSigningOut, startSignOut] = useTransition();
@@ -259,6 +307,18 @@ function Header() {
       )}
     >
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        {/* Desktop collapse toggle; the Sheet below handles small screens. */}
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-pressed={collapsed}
+          onClick={onToggleCollapsed}
+          className="hidden shrink-0 rounded-full lg:inline-flex"
+        >
+          <Menu />
+        </Button>
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger asChild>
             <Button
@@ -384,14 +444,33 @@ export default function DashboardShell({
   initialUser: User | null;
   children: React.ReactNode;
 }) {
+  // Collapse state survives reloads so the rail width feels stable per user.
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    // Deferred read keeps the SSR markup stable and satisfies the
+    // no-setState-in-effect rule.
+    const frame = requestAnimationFrame(() => {
+      setCollapsed(localStorage.getItem("sidebar-collapsed") === "1");
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((current) => {
+      localStorage.setItem("sidebar-collapsed", current ? "0" : "1");
+      return !current;
+    });
+  }
+
   return (
     <UserProvider initialUser={initialUser}>
       <UserHydrator />
       <div className={cn("flex h-dvh w-full overflow-hidden bg-zinc-50", styles.container)}>
         {/* The drawer in Header replaces this sidebar below lg. */}
-        <Sidebar className="hidden lg:flex" />
+        <Sidebar className="hidden lg:flex" collapsed={collapsed} />
         <div className="flex h-full min-w-0 flex-1 flex-col">
-          <Header />
+          <Header collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
           <main className={cn("flex-1 overflow-y-auto", styles.scrollbarHidden)}>
             {children}
           </main>

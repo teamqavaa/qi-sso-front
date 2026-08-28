@@ -31,8 +31,8 @@ export default function Login({onSwitchToRegister}: LoginProps) {
           return;
         }
         // Otherwise route by role: staff land in the central admin,
-        // students in their dashboard.
-        router.push(result.isStaff ? `${SSO_ADMIN_ORIGIN}/admin` : "/dashboard");
+        // students in their home page.
+        router.push(result.isStaff ? `${SSO_ADMIN_ORIGIN}/admin` : "/home");
       }
     });
   };
