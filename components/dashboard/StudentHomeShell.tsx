@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FlaskConical, GraduationCap, House, LogOut, Menu, Settings } from "lucide-react";
+import { FlaskConical, GraduationCap, House, LogOut, Menu, Search, Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { UserProvider, useUser } from "@/context/UserContext";
@@ -121,9 +122,18 @@ export default function StudentHomeShell({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const pathname = usePathname();
+  const router = useRouter();
   // Guards against the double-invoke of effects in React strict mode.
   const hydratedRef = useRef(false);
+
+  function submitSearch(event: React.FormEvent) {
+    event.preventDefault();
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return;
+    router.push(`/courses?q=${encodeURIComponent(trimmed)}`);
+  }
 
   useEffect(() => {
     if (hydratedRef.current) return;
@@ -189,6 +199,22 @@ export default function StudentHomeShell({
               <House size={15} strokeWidth={1.5} />
               Home
             </Link>
+            {/* Search routes into the courses catalog; too wide for small screens. */}
+            <form onSubmit={submitSearch} className="relative hidden w-64 md:block">
+              <Search
+                size={14}
+                strokeWidth={1.5}
+                className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search courses and paths..."
+                aria-label="Search"
+                className="h-8 rounded-full border-transparent bg-zinc-100 pl-8 text-sm"
+              />
+            </form>
           </header>
           <main className="flex-1 overflow-y-auto">{children}</main>
         </div>
