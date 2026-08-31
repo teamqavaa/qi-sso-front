@@ -38,39 +38,41 @@ export default function StudentTopBar() {
   return (
     <header className="fixed top-0 right-0 left-0 z-50 hidden bg-[#f8fafc] pt-6 pb-2 md:block">
       <div className="mx-auto w-[92%] max-w-5xl">
-        <div className="flex items-center justify-between rounded-full border border-gray-300 bg-white p-1.5 pl-2 shadow-lg shadow-gray-200/50">
-          <Link
-            href="/home"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black transition-transform hover:scale-105"
-            aria-label="Go to home"
-          >
-            <span className="text-2xl font-bold text-white">QI</span>
-          </Link>
-
-          <nav className="hidden items-center gap-6 lg:gap-8 lg:flex">
+        <div className="flex items-center justify-between gap-8 rounded-full border border-gray-300 bg-white p-1.5 pl-2 shadow-lg shadow-gray-200/50">
+          <div className="flex items-center gap-5">
             <Link
               href="/home"
-              aria-current={pathname === "/home" ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase transition-colors",
-                pathname === "/home" ? "text-blue-400" : "text-black hover:text-blue-400"
-              )}
+              className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black transition-transform hover:scale-105"
+              aria-label="Go to home"
             >
-              <House size={14} strokeWidth={2} />
-              Home
+              <span className="text-2xl font-bold text-white">QI</span>
             </Link>
-            <Link
-              href="/dashboard"
-              aria-current={pathname.startsWith("/dashboard") ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase transition-colors",
-                pathname.startsWith("/dashboard") ? "text-blue-400" : "text-black hover:text-blue-400"
-              )}
-            >
-              <GraduationCap size={14} strokeWidth={2} />
-              My Learning
-            </Link>
-          </nav>
+
+            <nav className="hidden items-center gap-6 lg:gap-8 lg:flex">
+              <Link
+                href="/home"
+                aria-current={pathname === "/home" ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase transition-colors",
+                  pathname === "/home" ? "text-blue-400" : "text-black hover:text-blue-400"
+                )}
+              >
+                <House size={14} strokeWidth={2} />
+                Home
+              </Link>
+              <Link
+                href="/dashboard"
+                aria-current={pathname.startsWith("/dashboard") ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase transition-colors",
+                  pathname.startsWith("/dashboard") ? "text-blue-400" : "text-black hover:text-blue-400"
+                )}
+              >
+                <GraduationCap size={14} strokeWidth={2} />
+                My Learning
+              </Link>
+            </nav>
+          </div>
 
           <form onSubmit={submitSearch} className="relative">
             <svg
