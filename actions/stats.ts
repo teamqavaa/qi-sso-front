@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { COURSES_API_URL } from "@/lib/courses-api";
 
 export type WeekDay = {
   date: string;
@@ -29,7 +30,7 @@ export async function getStatsAction(): Promise<StatsData> {
   if (!accessToken) return DEFAULT_STATS;
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/stats/", {
+    const res = await fetch(`${COURSES_API_URL}/api/stats/`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",

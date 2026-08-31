@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { COURSES_API_URL } from "@/lib/courses-api";
 
 export type ProgressEntry = {
   lab_id: string;
@@ -19,7 +20,7 @@ export async function getProgressAction(): Promise<ProgressEntry[]> {
   if (!accessToken) return [];
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/progress/", {
+    const res = await fetch(`${COURSES_API_URL}/api/progress/`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",

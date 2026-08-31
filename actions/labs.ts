@@ -1,10 +1,11 @@
 "use server";
 
 import type { Lab } from "@/types/lab";
+import { COURSES_API_URL } from "@/lib/courses-api";
 
 export async function getLabsAction(): Promise<{ labs: Lab[]; error: null } | { labs: []; error: string }> {
   try {
-    const res = await fetch("http://localhost:8000/api/labs/", { cache: "no-store" });
+    const res = await fetch(`${COURSES_API_URL}/api/labs/`, { cache: "no-store" });
     if (!res.ok) {
       return { labs: [], error: `Failed to fetch labs: ${res.status}` };
     }
