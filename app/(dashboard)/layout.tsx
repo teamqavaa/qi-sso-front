@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getMeAction } from "@/actions/auth";
 import DashboardShell from "./DashboardShell";
 
 export default async function DashboardLayout({
@@ -15,5 +16,10 @@ export default async function DashboardLayout({
     redirect("/");
   }
 
-  return <DashboardShell initialUser={null}>{children}</DashboardShell>;
+  // Hydrate the shared profile server-side so the initial paint shows the
+  // user's name instead of the "User" fallback. An expired token returns null
+  // and the shell's client-side hydrator sends the user back to login.
+  const { user } = await getMeAction();
+
+  return <DashboardShell initialUser={user}>{children}</DashboardShell>;
 }

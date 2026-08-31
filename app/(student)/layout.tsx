@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getMeAction } from "@/actions/auth";
 import StudentHomeShell from "@/components/dashboard/StudentHomeShell";
 
 export default async function StudentHomeLayout({
@@ -14,5 +15,8 @@ export default async function StudentHomeLayout({
     redirect("/");
   }
 
-  return <StudentHomeShell>{children}</StudentHomeShell>;
+  // Hydrate the profile server-side so the home page can greet by name.
+  const { user } = await getMeAction();
+
+  return <StudentHomeShell initialUser={user}>{children}</StudentHomeShell>;
 }

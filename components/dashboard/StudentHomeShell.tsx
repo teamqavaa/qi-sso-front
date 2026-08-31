@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 import { UserProvider, useUser } from "@/context/UserContext";
 import { getMeAction, clearAuthCookies, logoutAction } from "@/actions/auth";
+import type { User } from "@/types/user";
 import styles from "@/components/dashboard/Dashboard.module.css";
 
 // The student home is a lighter surface than the dashboard: only two links,
@@ -111,8 +112,10 @@ function HomeSidebar({
 }
 
 export default function StudentHomeShell({
+  initialUser,
   children,
 }: {
+  initialUser: User | null;
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -149,7 +152,7 @@ export default function StudentHomeShell({
   }
 
   return (
-    <UserProvider initialUser={null}>
+    <UserProvider initialUser={initialUser}>
       <HomeUserHydrator />
       <div className={cn("flex h-dvh w-full overflow-hidden bg-zinc-50", styles.container)}>
         <HomeSidebar
