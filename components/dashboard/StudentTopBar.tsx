@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { usePathname } from "next/navigation";
+import { useTransition } from "react";
 import { GraduationCap, House, LogOut, ShoppingCart, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import SearchTrigger from "@/components/search/SearchTrigger";
 import { useUser } from "@/context/UserContext";
 import { logoutAction } from "@/actions/auth";
 import { SSO_PUBLIC_HOME_ORIGIN } from "@/lib/sso";
@@ -16,8 +17,6 @@ import { cn } from "@/lib/utils";
 export default function StudentTopBar() {
   const { user } = useUser();
   const pathname = usePathname();
-  const router = useRouter();
-  const [query, setQuery] = useState("");
   const [isSigningOut, startSignOut] = useTransition();
 
   const displayName = user?.display_name || user?.full_name || "";
@@ -27,13 +26,6 @@ export default function StudentTopBar() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-
-  function submitSearch(event: React.FormEvent) {
-    event.preventDefault();
-    const trimmed = query.trim();
-    if (!trimmed) return;
-    router.push(`/courses?q=${encodeURIComponent(trimmed)}`);
-  }
 
   return (
     <header className="fixed top-0 right-0 left-0 z-50 hidden bg-[#f8fafc] pt-6 pb-2 md:block">
@@ -74,29 +66,7 @@ export default function StudentTopBar() {
             </nav>
           </div>
 
-          <form onSubmit={submitSearch} className="relative">
-            <svg
-              className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-              />
-            </svg>
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="What are you looking for?"
-              aria-label="Search courses"
-              className="h-9 w-56 rounded-full border border-transparent bg-neutral-100 pr-4 pl-9 text-sm text-neutral-800 focus:border-neutral-300 focus:bg-white focus:outline-none placeholder:text-neutral-400"
-            />
-          </form>
+          <SearchTrigger />
 
           <div className="flex items-center gap-2 pr-2">
             <a

@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { BookOpen, GraduationCap, House, LogOut, Route, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import SearchTrigger from "@/components/search/SearchTrigger";
 import { useUser } from "@/context/UserContext";
 import { logoutAction } from "@/actions/auth";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ export default function StudentMobileTopBar() {
                 {initials || <User className="h-4 w-4" />}
               </AvatarFallback>
             </Avatar>
+            <SearchTrigger />
             <button
               type="button"
               onClick={() => setIsMenuOpen((open) => !open)}
