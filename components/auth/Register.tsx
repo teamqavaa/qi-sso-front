@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 // Importations des composants shadcn/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +10,12 @@ import Social from "./Social";
 
 // Importation de votre Server Action
 import { registerAction } from "@/actions/auth";
-import { safeReturnPath } from "@/lib/sso";
 
 interface RegisterProps {
   onSwitchToLogin: () => void;
 }
 
 export default function Register({ onSwitchToLogin }: RegisterProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -30,16 +27,11 @@ export default function Register({ onSwitchToLogin }: RegisterProps) {
 
     // Déclenchement sécurisé de la Server Action avec useTransition
     startTransition(async () => {
-      const result = await registerAction(formData);
+      const next = new URLSearchParams(window.location.search).get("next");
+      const result = await registerAction(formData, next ?? undefined);
 
       if (result?.error) {
         setError(result.error);
-      } else if (result?.success) {
-        // Redirection vers le dashboard après la connexion automatique réussie
-        // Retourne à la page d'origine si l'utilisateur venait d'une autre app.
-        const next = new URLSearchParams(window.location.search).get("next");
-        router.push(safeReturnPath(next));
-        router.refresh();
       }
     });
   };

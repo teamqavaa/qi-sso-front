@@ -2,9 +2,14 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SSO_PUBLIC_HOME_ORIGIN } from "@/lib/sso";
+import { COURSES_API_URL } from "@/lib/courses-api";
+import {
+  SSO_ADMIN_ORIGIN,
+  SSO_PUBLIC_HOME_ORIGIN,
+  safeReturnPath,
+} from "@/lib/sso";
 
-export async function loginAction(formData: FormData) {
+export async function loginAction(formData: FormData, next?: string) {
   // 1. On récupère la valeur du champ "identifier" de votre formulaire Next.js
   const identifier = formData.get("identifier") as string;
   const password = formData.get("password") as string;
@@ -20,8 +25,14 @@ export async function loginAction(formData: FormData) {
     password: password,
   };
 
+  // redirect() always throws a NEXT_REDIRECT error. Keep it OUT of the network
+  // try/catch below, whose catch would otherwise turn a successful login into
+  // a misleading "unable to connect" message. Compute the destination inside
+  // the try, then redirect after it.
+  let redirectUrl: string | null = null;
+
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
+    const response = await fetch(`${COURSES_API_URL}/api/auth/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -56,11 +67,11 @@ export async function loginAction(formData: FormData) {
       maxAge: 60 * 60 * 24 * 7, // 7 jours
     });
 
-    // Resolve the role right away so the client can route staff to the
+    // Resolve the role server-side so the action can route staff to the
     // central admin and students to their dashboard.
     let isStaff = false;
     try {
-      const meResponse = await fetch("http://127.0.0.1:8000/api/users/me/", {
+      const meResponse = await fetch(`${COURSES_API_URL}/api/users/me/`, {
         headers: { Authorization: `Bearer ${data.access}` },
         cache: "no-store",
       });
@@ -73,13 +84,25 @@ export async function loginAction(formData: FormData) {
       // the safe default and admin APIs still enforce staff server-side.
     }
 
-    return { success: true, isStaff };
+    if (isStaff) {
+      const resolved = safeReturnPath(next ?? null);
+      const target = encodeURIComponent(resolved === "/home" ? "/admin" : resolved);
+      redirectUrl = `${SSO_ADMIN_ORIGIN}/auth/complete?token=${encodeURIComponent(data.access)}&next=${target}`;
+    } else {
+      // Students stay on the portal. Follow the deep-link path when one applies,
+      // otherwise land on the student home page.
+      redirectUrl = safeReturnPath(next ?? null);
+    }
   } catch {
     return { error: "Unable to connect to the authentication server." };
   }
+
+  if (redirectUrl) {
+    redirect(redirectUrl);
+  }
 }
 
-export async function registerAction(formData: FormData) {
+export async function registerAction(formData: FormData, next?: string) {
   // 1. Récupération des champs distincts du formulaire Next.js
   const emailInput = (formData.get("email") as string)?.trim() || null;
   const phoneInput = (formData.get("phone") as string)?.trim() || null;
@@ -99,9 +122,12 @@ export async function registerAction(formData: FormData) {
     phone: phoneInput,
   };
 
+  // redirect() throws NEXT_REDIRECT; keep it out of the network try/catch below.
+  let redirectUrl: string | null = null;
+
   try {
     // 3. Envoi de la requête POST vers votre UserViewSet
-    const response = await fetch("http://127.0.0.1:8000/api/users/", {
+    const response = await fetch(`${COURSES_API_URL}/api/users/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -140,11 +166,16 @@ export async function registerAction(formData: FormData) {
       maxAge: 60 * 60 * 24 * 7, // 7 jours
     });
 
-    return { success: true };
-
+    // New accounts are never staff, so registration only ever returns a
+    // student. Send the user on the deep-link path when one applies.
+    redirectUrl = safeReturnPath(next ?? null);
   } catch (error) {
     console.error("🚨 Erreur réseau Server Action :", error);
     return { error: "Impossible de joindre le serveur d'authentification." };
+  }
+
+  if (redirectUrl) {
+    redirect(redirectUrl);
   }
 }
 
@@ -160,7 +191,7 @@ export async function getMeAction() {
   try {
     // Appel de l'action 'me' personnalisée de votre UserViewSet Django
     // On utilise 'web:8000' car la requête part du serveur Next.js vers le conteneur Django
-    const response = await fetch("http://127.0.0.1:8000/api/users/me/", {
+    const response = await fetch(`${COURSES_API_URL}/api/users/me/`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -215,7 +246,7 @@ export async function updateProfileAction(field: string, value: string) {
   }
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/users/me/", {
+    const response = await fetch(`${COURSES_API_URL}/api/users/me/`, {
       method: "PATCH",
       headers: {
         "Authorization": `Bearer ${accessToken}`,

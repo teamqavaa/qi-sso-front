@@ -1,39 +1,28 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Social from "./Social";
 import { loginAction } from "@/actions/auth";
-import { SSO_ADMIN_ORIGIN, safeReturnPath } from "@/lib/sso";
 
 interface LoginProps {
   onSwitchToRegister: () => void;
 }
 export default function Login({onSwitchToRegister}: LoginProps) {
-    const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>()
 
   const handleFormSubmit = async (formData: FormData) => {
     setError(null);
     startTransition(async () => {
-      const result = await loginAction(formData);
+      // An explicit deep link (from Contents Lab) wins; the server action
+      // routes staff and students to the right return destination.
+      const next = new URLSearchParams(window.location.search).get("next");
+      const result = await loginAction(formData, next ?? undefined);
       if (result?.error) setError(result.error);
-      if (result?.success) {
-        // An explicit return path (deep link from another app) always wins.
-        const next = new URLSearchParams(window.location.search).get("next");
-        if (next) {
-          router.push(safeReturnPath(next));
-          return;
-        }
-        // Otherwise route by role: staff land in the central admin,
-        // students in their home page.
-        router.push(result.isStaff ? `${SSO_ADMIN_ORIGIN}/admin` : "/home");
-      }
     });
   };
   return (
