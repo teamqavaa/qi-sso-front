@@ -7,6 +7,7 @@ import { ChevronRight, Route, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { LessonRow } from "@/components/dashboard/student/LessonRow";
+import { useUser } from "@/context/UserContext";
 import { cn } from "@/lib/utils";
 
 export type StudentHomeCourse = {
@@ -39,163 +40,197 @@ export type StudentHomeData = {
   featuredCourses: StudentHomeCourse[];
 };
 
-// Mono tracked eyebrows keep section hierarchy quiet and visually consistent.
+// Uppercase tracked eyebrows match the public homepage section headers.
 function Eyebrow({ children }: { children: ReactNode }) {
   return (
-    <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+    <h2 className="text-xs font-semibold tracking-widest text-neutral-500 uppercase md:text-sm">
       {children}
     </h2>
   );
 }
 
 export default function StudentHome({ data }: { data: StudentHomeData }) {
+  const { user } = useUser();
+  const firstName = user?.display_name?.split(" ")[0] || user?.full_name?.split(" ")[0] || "there";
+
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-      {/* Upskilling: tracks entry points. */}
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Link
-          href="/learning-path/skill"
-          className="flex items-center justify-between rounded-xl border border-border bg-white p-5 transition-colors hover:border-zinc-400"
-        >
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Skill tracks</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Sharpen one skill with focused labs.
-            </p>
-          </div>
-          <Route size={18} strokeWidth={1.5} className="text-muted-foreground" />
-        </Link>
-        <Link
-          href="/learning-path/career"
-          className="flex items-center justify-between rounded-xl border border-border bg-white p-5 transition-colors hover:border-zinc-400"
-        >
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Career tracks</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Follow a guided path to a role.
-            </p>
-          </div>
-          <Sparkles size={18} strokeWidth={1.5} className="text-muted-foreground" />
-        </Link>
+    <div className="w-full">
+      {/* Welcome hero, styled after the homepage banner. */}
+      <section className="w-full bg-white px-6 py-16 md:px-12 lg:px-20">
+        <div className="mx-auto flex max-w-5xl flex-col items-start gap-4">
+          <span className="rounded-full border border-gray-200 bg-gray-50 px-5 py-2.5 text-sm font-semibold tracking-tight text-gray-700 shadow-sm">
+            Welcome back, {firstName}
+          </span>
+          <h1 className="text-4xl font-extrabold tracking-tight text-black md:text-5xl">
+            Continue your journey.
+          </h1>
+          <p className="max-w-2xl text-lg font-medium text-gray-600 md:text-xl">
+            Pick up where you left off, sharpen a skill, or explore a new track.
+          </p>
+        </div>
       </section>
 
-      {/* CTA banners: labs and pacing. */}
-      <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Card className="rounded-2xl bg-zinc-950 text-white">
-          <CardContent className="flex flex-col gap-2">
-            <h3 className="text-base font-semibold">Explore labs</h3>
-            <p className="text-sm text-white/70">
-              Hands-on environments. Practice by doing, not watching.
-            </p>
-            <Link
-              href="/labs"
-              className="mt-1 inline-flex w-fit items-center rounded-full bg-white px-5 py-2 text-sm font-medium text-zinc-950 transition-colors hover:bg-zinc-200"
-            >
-              Go to labs
-            </Link>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl bg-zinc-100">
-          <CardContent className="flex flex-col gap-2">
-            <h3 className="text-base font-semibold">Set your pace</h3>
-            <p className="text-sm text-muted-foreground">
-              Pick a track, plan your week, and watch your streak grow.
-            </p>
-            <Link
-              href="/learning-path"
-              className="mt-1 inline-flex w-fit items-center rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
-            >
-              View tracks
-            </Link>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Discovery: backend-picked recommendation. */}
-      <section className="mt-8">
-        <Eyebrow>Recommended for you</Eyebrow>
-        {data.recommendation ? (
-          <Card className="mt-3 rounded-2xl border-border bg-white">
-            <CardContent className="flex flex-col gap-2">
-              <span className="w-fit rounded-full bg-zinc-100 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {data.recommendation.eyebrow}
-              </span>
-              <h3 className="text-lg font-semibold tracking-tight text-foreground">
-                {data.recommendation.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {data.recommendation.description}
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Upskilling: tracks entry points. */}
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Link
+            href="/learning-path/skill"
+            className="flex items-center justify-between rounded-3xl border border-neutral-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+          >
+            <div>
+              <h3 className="text-base font-bold text-neutral-900">Skill tracks</h3>
+              <p className="mt-1 text-sm font-medium text-neutral-500">
+                Sharpen one skill with focused labs.
               </p>
-              <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                {data.recommendation.reason}
-              </span>
+            </div>
+            <Route size={18} strokeWidth={1.5} className="text-blue-400" />
+          </Link>
+          <Link
+            href="/learning-path/career"
+            className="flex items-center justify-between rounded-3xl border border-neutral-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+          >
+            <div>
+              <h3 className="text-base font-bold text-neutral-900">Career tracks</h3>
+              <p className="mt-1 text-sm font-medium text-neutral-500">
+                Follow a guided path to a role.
+              </p>
+            </div>
+            <Sparkles size={18} strokeWidth={1.5} className="text-blue-400" />
+          </Link>
+        </section>
+
+        {/* CTA banners: labs and pacing. */}
+        <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Card className="rounded-3xl bg-black shadow-xl">
+            <CardContent className="flex flex-col gap-2">
+              <h3 className="text-base font-bold text-white">Explore labs</h3>
+              <p className="text-sm text-neutral-400">
+                Hands-on environments. Practice by doing, not watching.
+              </p>
               <Link
-                href={data.recommendation.href}
-                className="mt-1 inline-flex w-fit items-center rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+                href="/labs"
+                className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-blue-400 px-5 py-2.5 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-neutral-800"
               >
-                {data.recommendation.ctaLabel}
+                Go to labs
+                <span className="flex size-6 items-center justify-center rounded-full bg-white text-black">
+                  <ChevronRight size={14} strokeWidth={2} />
+                </span>
               </Link>
             </CardContent>
           </Card>
-        ) : (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Recommendations show up once you browse a few courses.
-          </p>
-        )}
-      </section>
-      {/* Discovery: featured courses. */}
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <Eyebrow>Discover courses</Eyebrow>
-          <Link
-            href="/courses"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Browse all
-            <ChevronRight size={14} strokeWidth={1.5} />
-          </Link>
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {data.featuredCourses.map((course) => (
-            <Link
-              key={course.href}
-              href={course.href}
-              className="flex flex-col justify-between rounded-xl border border-border bg-white p-4 transition-colors hover:border-zinc-400"
-            >
-              <div>
-                <Badge
-                  variant="outline"
-                  className="rounded-full bg-transparent font-mono text-[10px] uppercase tracking-widest"
-                >
-                  {course.kind}
-                </Badge>
-                <h3 className="mt-2 text-sm font-semibold leading-snug text-foreground">
-                  {course.title}
-                </h3>
-              </div>
-              <span className="mt-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {course.duration}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
+          <Card className="rounded-3xl border border-neutral-100 bg-white shadow-sm">
+            <CardContent className="flex flex-col gap-2">
+              <h3 className="text-base font-bold text-neutral-900">Set your pace</h3>
+              <p className="text-sm font-medium text-neutral-500">
+                Pick a track, plan your week, and watch your streak grow.
+              </p>
+              <Link
+                href="/learning-path"
+                className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-blue-400 px-5 py-2.5 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-neutral-800"
+              >
+                View tracks
+                <span className="flex size-6 items-center justify-center rounded-full bg-white text-black">
+                  <ChevronRight size={14} strokeWidth={2} />
+                </span>
+              </Link>
+            </CardContent>
+          </Card>
+        </section>
 
-      {/* Keep going: in-progress work. */}
-      {data.keepGoing.length > 0 && (
-        <section className="mt-8">
-          <Eyebrow>Keep going</Eyebrow>
-          <div
-            className={cn(
-              "mt-3 flex flex-col rounded-xl border border-border bg-white px-2 py-1"
-            )}
-          >
-            {data.keepGoing.map((row) => (
-              <LessonRow key={row.href} data={row} />
+        {/* Discovery: backend-picked recommendation. */}
+        <section className="mt-10">
+          <Eyebrow>Recommended for you</Eyebrow>
+          {data.recommendation ? (
+            <Card className="mt-4 rounded-3xl border border-neutral-100 bg-white shadow-sm">
+              <CardContent className="flex flex-col gap-2">
+                <span className="w-fit rounded-full bg-neutral-100 px-4 py-1 text-xs font-semibold tracking-widest text-neutral-500 uppercase">
+                  {data.recommendation.eyebrow}
+                </span>
+                <h3 className="text-lg font-bold tracking-tight text-neutral-900">
+                  {data.recommendation.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-neutral-500">
+                  {data.recommendation.description}
+                </p>
+                <span className="mt-1 text-xs font-semibold tracking-widest text-neutral-500 uppercase">
+                  {data.recommendation.reason}
+                </span>
+                <Link
+                  href={data.recommendation.href}
+                  className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-blue-400 px-5 py-2.5 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-neutral-800"
+                >
+                  {data.recommendation.ctaLabel}
+                  <span className="flex size-6 items-center justify-center rounded-full bg-white text-black">
+                    <ChevronRight size={14} strokeWidth={2} />
+                  </span>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <p className="mt-4 text-sm font-medium text-neutral-500">
+              Recommendations show up once you browse a few courses.
+            </p>
+          )}
+        </section>
+
+        {/* Discovery: featured courses. */}
+        <section className="mt-10">
+          <div className="flex items-center justify-between">
+            <Eyebrow>Discover courses</Eyebrow>
+            <Link
+              href="/courses"
+              className="group inline-flex items-center gap-2 text-sm font-semibold text-neutral-900 transition-colors hover:text-neutral-600"
+            >
+              Browse all
+              <ChevronRight
+                size={16}
+                strokeWidth={2}
+                className="text-blue-400 transition-transform duration-200 group-hover:translate-x-1"
+              />
+            </Link>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {data.featuredCourses.map((course) => (
+              <Link
+                key={course.href}
+                href={course.href}
+                className="flex flex-col justify-between rounded-3xl border border-neutral-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div>
+                  <Badge
+                    variant="outline"
+                    className="rounded-full bg-transparent text-xs font-semibold tracking-widest text-neutral-500 uppercase"
+                  >
+                    {course.kind}
+                  </Badge>
+                  <h3 className="mt-2 text-sm font-bold leading-snug text-neutral-900">
+                    {course.title}
+                  </h3>
+                </div>
+                <span className="mt-4 text-xs font-semibold tracking-widest text-neutral-500 uppercase">
+                  {course.duration}
+                </span>
+              </Link>
             ))}
           </div>
         </section>
-      )}
+
+        {/* Keep going: in-progress work. */}
+        {data.keepGoing.length > 0 && (
+          <section className="mt-10">
+            <Eyebrow>Keep going</Eyebrow>
+            <div
+              className={cn(
+                "mt-4 flex flex-col rounded-3xl border border-neutral-100 bg-white px-2 py-1 shadow-sm"
+              )}
+            >
+              {data.keepGoing.map((row) => (
+                <LessonRow key={row.href} data={row} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   );
 }
