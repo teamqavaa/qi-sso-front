@@ -1,0 +1,4 @@
+const NEXT_PUBLIC_PRACTICE_LAB_URL =
+  process.env.NEXT_PUBLIC_PRACTICE_LAB_URL ?? "http://localhost:3002";
+
+export { NEXT_PUBLIC_PRACTICE_LAB_URL };

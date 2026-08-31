@@ -1,6 +1,7 @@
 "use client";
 
 import type { Lab } from "@/types/lab";
+import { NEXT_PUBLIC_PRACTICE_LAB_URL } from "@/lib/pratice-lab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -78,7 +79,7 @@ export default function LabCard({
 
             <Button asChild size="sm" className="flex-shrink-0">
               <a
-                href={`http://localhost:3001/labs/${lab.id}`}
+                href={`${NEXT_PUBLIC_PRACTICE_LAB_URL}/labs/${lab.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
