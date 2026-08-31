@@ -53,7 +53,7 @@ export function StreakTracker({ data }: { data: StreakData }) {
         <span className="text-sm font-semibold text-foreground">{data.summary}</span>
       </div>
 
-      <div className="flex items-center justify-between gap-1 pr-9">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-1 sm:pr-9">
         {data.days.map((day) => (
           <div
             key={day.label}

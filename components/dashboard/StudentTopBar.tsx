@@ -6,6 +6,14 @@ import { useTransition } from "react";
 import { GraduationCap, House, LogOut, ShoppingCart, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import SearchTrigger from "@/components/search/SearchTrigger";
 import { useUser } from "@/context/UserContext";
 import { logoutAction } from "@/actions/auth";
@@ -76,39 +84,38 @@ export default function StudentTopBar() {
               <span>Cart</span>
             </a>
 
-            <div className="group relative flex items-center">
-              <button
-                type="button"
-                className="flex items-center justify-center focus:outline-none"
-                aria-label="User menu"
-              >
-                <Avatar className="size-8 border border-gray-200 bg-gray-100">
-                  <AvatarFallback className="bg-gray-100 font-medium text-gray-500">
-                    {initials || <User className="h-4 w-4" />}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-
-              <div className="invisible absolute top-full right-0 z-50 min-w-[180px] pt-1.5 opacity-0 transition-all duration-200 ease-in-out group-hover:visible group-hover:opacity-100">
-                <div className="space-y-2 rounded-2xl border border-gray-100 bg-white p-2 shadow-xl">
-                  <div className="flex flex-col border-b border-gray-100 px-1 pt-1 pb-2">
-                    <span className="truncate text-xs font-semibold text-gray-800">
-                      {displayName || "User"}
-                    </span>
-                    <span className="text-[10px] font-medium text-emerald-600">Online</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => startSignOut(() => logoutAction())}
-                    disabled={isSigningOut}
-                    className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
-                  >
-                    <LogOut className="h-3.5 w-3.5 text-red-500" />
-                    {isSigningOut ? "Signing out..." : "Sign Out"}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center justify-center focus:outline-none"
+                  aria-label="User menu"
+                >
+                  <Avatar className="size-8 border border-gray-200 bg-gray-100">
+                    <AvatarFallback className="bg-gray-100 font-medium text-gray-500">
+                      {initials || <User className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[180px] p-2">
+                <DropdownMenuLabel className="px-1 pt-1 pb-2">
+                  <span className="block truncate text-xs font-semibold text-gray-800">
+                    {displayName || "User"}
+                  </span>
+                  <span className="text-[10px] font-medium text-emerald-600">Online</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={() => startSignOut(() => logoutAction())}
+                  disabled={isSigningOut}
+                  className="text-xs font-medium text-red-600 focus:bg-red-50 focus:text-red-600"
+                >
+                  <LogOut className="h-3.5 w-3.5 text-red-500" />
+                  {isSigningOut ? "Signing out..." : "Sign Out"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

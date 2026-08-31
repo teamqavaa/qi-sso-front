@@ -18,7 +18,7 @@ export default function SettingsView({ initialUser }: { initialUser: User | null
 
   if (!user) {
     return (
-      <div className="px-8 py-10 max-w-2xl mx-auto w-full">
+<div className="px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10 max-w-2xl mx-auto w-full">
         <p className="text-sm text-muted-foreground">
           Could not load your profile. Please refresh the page.
         </p>
@@ -56,9 +56,9 @@ export default function SettingsView({ initialUser }: { initialUser: User | null
         <p className="text-sm text-muted-foreground mt-1">Manage your profile and preferences.</p>
       </div>
 
-      <div className="bg-card rounded-xl border border-border p-6 mb-6">
+      <div className="bg-card rounded-xl border border-border px-4 sm:px-6 mb-6">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">Avatar</p>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-[#007bff]/10 flex items-center justify-center text-[#007bff] font-semibold text-lg flex-shrink-0">
             {(user.display_name || user.full_name || "User")
               .split(" ")
@@ -71,7 +71,7 @@ export default function SettingsView({ initialUser }: { initialUser: User | null
             <p className="text-sm font-medium text-foreground">{user.full_name}</p>
             <p className="text-xs text-muted-foreground mt-0.5">@{user.display_name}</p>
           </div>
-          <button className="ml-auto text-xs text-[#007bff] border border-[#007bff]/30 px-3 py-1.5 rounded-lg hover:bg-[#007bff]/5 transition-colors">
+          <button className="text-xs text-[#007bff] border border-[#007bff]/30 px-3 py-1.5 rounded-lg hover:bg-[#007bff]/5 transition-colors">
             Change photo
           </button>
         </div>
@@ -83,7 +83,7 @@ export default function SettingsView({ initialUser }: { initialUser: User | null
         ))}
       </div>
 
-      <div className="mt-6 bg-card rounded-xl border border-border px-6 py-5">
+      <div className="mt-6 bg-card rounded-xl border border-border px-4 sm:px-6 py-5">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Account</p>
         <button className="text-sm text-red-500 hover:text-red-600 transition-colors">
           Delete account

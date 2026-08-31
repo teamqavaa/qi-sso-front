@@ -100,7 +100,7 @@ export default function CoursesBrowser({
     <>
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Courses</h1>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative">
             <Search
               size={14}
@@ -113,7 +113,7 @@ export default function CoursesBrowser({
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search courses and paths..."
               aria-label="Search courses and paths"
-              className="h-8 w-56 rounded-full bg-zinc-100 pl-8 text-sm"
+              className="h-8 w-full sm:w-56 rounded-full bg-zinc-100 pl-8 text-sm"
             />
           </div>
 
@@ -123,7 +123,7 @@ export default function CoursesBrowser({
                 Filter
               </span>
               <Select value={level} onValueChange={(value) => setLevel(value as LevelFilter)}>
-                <SelectTrigger className="w-[170px]" aria-label="Filter courses by level">
+                <SelectTrigger className="w-full sm:w-[170px]" aria-label="Filter courses by level">
                   <span data-slot="select-value">
                     {LEVEL_OPTIONS.find((option) => option.value === level)?.label}
                   </span>
@@ -143,7 +143,7 @@ export default function CoursesBrowser({
                 Sort by
               </span>
               <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortKey)}>
-                <SelectTrigger className="w-[160px]" aria-label="Sort courses">
+                <SelectTrigger className="w-full sm:w-[160px]" aria-label="Sort courses">
                   <span data-slot="select-value">
                     {SORT_OPTIONS.find((option) => option.value === sortBy)?.label}
                   </span>
