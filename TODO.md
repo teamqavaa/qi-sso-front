@@ -1,17 +1,8 @@
-# Dashboard placeholder sections
+# Dashboard features pending backend endpoints
 
-These sections render mock data. Their backend endpoints do not exist yet.
-They are hidden until wired. The dashboard shows the wired sections only:
-greeting hero, stat cards, weekly streak, continue/keep-going.
-
-To preview the placeholders, set `SHOW_PLACEHOLDER_SECTIONS` to `true` in
-`components/dashboard/views/StudentDashboard.tsx`. The sections appear faded.
-When a section is wired, remove its fade and its guard.
-
-| Section | Component | Mock data (data.ts) | Needs backend endpoint |
-|---|---|---|---|
-| Notification banner | `student/NotificationBanner.tsx` | `banner` | notifications |
-| Achievements | `student/AchievementBadge.tsx` | `achievements` | achievements |
+The notification banner and achievements sections previously rendered mock data.
+They are removed rather than previewed. Build them on real endpoints when those
+exist.
 
 ## Wired sections
 
@@ -26,5 +17,5 @@ These shell features are removed until their backend endpoints exist.
 
 | Feature | Location | Needs backend endpoint |
 |---|---|---|
-| Level + XP progress card | `DashboardShell.tsx` (sidebar) | user level / XP (see `components/dashboard/profile-data.ts`, currently unused) |
+| Level + XP progress card | `DashboardShell.tsx` (sidebar) | user level / XP |
 | Notification bell | `DashboardShell.tsx` (header) | notifications / unread count |

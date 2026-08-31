@@ -12,17 +12,16 @@ Five repos form the learning platform.
 | ---- | ---- | ---- |
 | qi-sso-front | Identity portal (this repo) | 3001 |
 | contents-lab | Course catalog, cart, staff admin | 3000 |
-| Digital-Readiness-Lab | User accounts, labs, code execution API | 8000 |
-| courses-api | Course catalog REST API | 8001 |
+| courses-api | Catalog, identity, and labs REST API | 8000 |
 | pratice-lab | Coding practice workspace | 3002 |
 
 Notes:
 
-- The `pratice-lab` dev script pins port 3001. Run that app on port 3002 when the portal runs on 3001.
+- The `pratice-lab` dev script starts on port 3002.
 
 ## What the portal does
 
-The sign-in form posts the credentials to the DRL backend at port 8000 (`/api/auth/login/`).
+The sign-in form posts the credentials to the courses-api backend at port 8000 (`/api/auth/login/`).
 The backend validates the credentials.
 It returns JWT access and refresh tokens.
 The portal stores the tokens in cookies (`access_token` and `refresh_token`).
@@ -40,24 +39,25 @@ Then the user goes to the contents-lab home page on port 3000.
 
 ## How the portal connects the apps
 
-- One cookie set signs the user into `contents-lab` and `pratice-lab`.
+- The browser keeps cookies per-origin.
+- The portal sets its cookie on port 3001.
+- Staff sign-in passes the token to the contents-lab admin area on port 3000.
+  Contents Lab adopts the token into its own cookie at `/auth/complete`.
 - `courses-api` validates the same token with the shared JWT secret.
-- The dashboard reads course data from `courses-api` (port 8001).
-- The dashboard reads labs and stats from the DRL backend (port 8000).
+- The dashboard reads courses, labs, and stats from the single `courses-api` backend (port 8000).
 
 ## Requirements
 
 - Node.js 20 or newer.
 - npm.
-- The DRL backend on port 8000.
-- `courses-api` on port 8001 (for the dashboard catalog).
+- `courses-api` on port 8000 (the single backend for auth, catalog, and labs).
 
 ## Setup
 
 1. Create the `.env` file.
    Copy `.env.example` to `.env`.
-   Set `SSO_JWT_SECRET` to the `SECRET_KEY` value from `Digital-Readiness-Lab/backend/.env`.
-   Keep `COURSES_API_URL=http://localhost:8001`.
+   Set `SSO_JWT_SECRET` to the same value that courses-api uses (see `courses-api/.sso-jwt-secret`).
+   Keep `COURSES_API_URL=http://localhost:8000`.
 
 2. Install the dependencies.
 
@@ -78,16 +78,16 @@ Then the user goes to the contents-lab home page on port 3000.
 
 | Variable | Purpose | Default |
 | ------- | ------ | ------- |
-| `COURSES_API_URL` | Base URL of the courses-api service | `http://localhost:8001` |
+| `COURSES_API_URL` | Base URL of the courses-api service | `http://localhost:8000` |
 | `SSO_JWT_SECRET` | JWT signing key shared with courses-api | (required) |
 | `SSO_RETURN_ORIGIN` | Allowlisted return origin after sign-in | `http://localhost:3001` |
 | `SSO_ADMIN_ORIGIN` | Staff admin origin | `http://localhost:3000` |
 | `SSO_PUBLIC_HOME_ORIGIN` | Landing page after logout | `http://localhost:3000` |
 
 `SSO_JWT_SECRET` is the shared signing key of the SSO ecosystem.
-The DRL backend signs the tokens with its `SECRET_KEY`.
-`courses-api` validates the tokens with the same key.
-Set `SSO_JWT_SECRET` to the DRL `SECRET_KEY` value.
+courses-api signs the tokens with this key.
+The portal validates the tokens with the same key.
+Set `SSO_JWT_SECRET` to the same value that courses-api uses (<code>courses-api/.sso-jwt-secret</code>).
 
 The allowlist in `lib/sso.ts` stops open-redirect attacks.
 A return origin must match one of the configured origins.
@@ -120,7 +120,6 @@ A disallowed origin sends the user to `/home` instead.
 
 ## Related repos
 
-- [Digital-Readiness-Lab](https://github.com/teamqavaa/Digital-Readiness-Lab.git)
 - [contents-lab](https://github.com/teamqavaa/contents-lab.git)
 - [courses-api](https://github.com/teamqavaa/courses-api.git)
 - [pratice-lab](https://github.com/teamqavaa/pratice-lab.git)
