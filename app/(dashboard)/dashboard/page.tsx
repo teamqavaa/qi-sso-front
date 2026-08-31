@@ -136,7 +136,6 @@ function buildFeaturedRecommendation(
 }
 
 export default async function DashboardPage() {
-  // Overlay live stats onto the typed default dataset; new sections stay mock until backend endpoints exist.
   const stats = await getStatsAction();
 
   const [coursesResult, progressResult, courseStats] = await Promise.all([

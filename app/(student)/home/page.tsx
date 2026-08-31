@@ -48,7 +48,6 @@ export default async function StudentHomePage() {
   );
   const activeDays = stats.week.filter((day) => day.practiced).length;
 
-  // XP and level are mock values until a gamification endpoint exists.
   const data: StudentHomeData = {
     stats: [
       {
@@ -56,18 +55,6 @@ export default async function StudentHomePage() {
         value: `${stats.current_streak}d`,
         meta: activeDays > 0 ? `${activeDays} active this week` : "Start today",
         icon: "flame",
-      },
-      {
-        label: "XP",
-        value: "1,240",
-        meta: "Mock — endpoint pending",
-        icon: "xp",
-      },
-      {
-        label: "Level",
-        value: "4",
-        meta: "Explorer",
-        icon: "level",
       },
       {
         label: "Labs done",

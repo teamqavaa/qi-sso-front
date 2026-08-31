@@ -1,16 +1,8 @@
 import { redirect } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
 import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getMeAction } from "@/actions/auth";
-
-// Preferences have no backend endpoint yet; every value below is placeholder.
-const MOCK_PREFERENCES = [
-  { label: "Weekly goal", value: "5 hours" },
-  { label: "Email reminders", value: "On" },
-  { label: "Public profile", value: "Off" },
-];
 
 export default async function SettingsPage() {
   const { user } = await getMeAction();
@@ -32,7 +24,7 @@ export default async function SettingsPage() {
         Settings
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Manage your profile and learning preferences.
+        Manage your profile.
       </p>
 
       <section className="mt-8">
@@ -56,27 +48,6 @@ export default async function SettingsPage() {
             Language
             <Input defaultValue={user.language || ""} />
           </label>
-        </div>
-      </section>
-
-      <Separator className="mt-8" />
-
-      <section className="mt-8">
-        <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          Preferences
-        </h2>
-        <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-white">
-          {MOCK_PREFERENCES.map((preference) => (
-            <div
-              key={preference.label}
-              className="flex items-center justify-between px-4 py-3"
-            >
-              <span className="text-sm text-foreground">{preference.label}</span>
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {preference.value}
-              </span>
-            </div>
-          ))}
         </div>
       </section>
 

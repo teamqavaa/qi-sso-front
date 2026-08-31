@@ -4,13 +4,6 @@ export type Stat = {
   meta: string;
 };
 
-export type NotificationBannerData = {
-  count: number;
-  initials: string;
-  message: string;
-  ctaLabel: string;
-};
-
 export type ContinueMeta = {
   icon: "clock" | "star" | "calendar";
   text: string;
@@ -76,22 +69,10 @@ export type StreakData = {
   days: StreakDay[];
 };
 
-export type AchievementIconName = "award" | "flame" | "terminal" | "shield";
-
-export type AchievementBadgeData = {
-  title: string;
-  detail: string;
-  icon: AchievementIconName;
-  earned: boolean;
-  locked: boolean;
-};
-
 export type StudentDashboardData = {
   greetingName: string;
   greetingSubtitle: string;
-  banner: NotificationBannerData;
   stats: Stat[];
   continueSection: ContinueSectionData;
   streak: StreakData;
-  achievements: AchievementBadgeData[];
 };

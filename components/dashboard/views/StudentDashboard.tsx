@@ -8,10 +8,8 @@ import { type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { AchievementBadge } from "@/components/dashboard/student/AchievementBadge";
 import { ContinueCard } from "@/components/dashboard/student/ContinueCard";
 import { LessonRow } from "@/components/dashboard/student/LessonRow";
-import { NotificationBanner } from "@/components/dashboard/student/NotificationBanner";
 import { StatCard } from "@/components/dashboard/student/StatCard";
 import { StreakTracker } from "@/components/dashboard/student/StreakTracker";
 import type {
@@ -19,10 +17,6 @@ import type {
   StudentDashboardData,
 } from "@/components/dashboard/student/types";
 import { useUser } from "@/context/UserContext";
-
-// Decorative sections still render mock data; keep them hidden until their
-// backend endpoints exist (see TODO.md). Set true to preview them faded.
-const SHOW_PLACEHOLDER_SECTIONS = false;
 
 // Mono tracked eyebrows keep section hierarchy quiet and visually consistent.
 function Eyebrow({ children }: { children: ReactNode }) {
@@ -52,10 +46,6 @@ export default function StudentDashboard({
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8 lg:py-10">
-      {SHOW_PLACEHOLDER_SECTIONS && (
-        <NotificationBanner data={data.banner} className="opacity-70" />
-      )}
-
       <Card className="mt-6 rounded-2xl bg-zinc-100">
         <CardContent className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
@@ -167,17 +157,6 @@ export default function StudentDashboard({
           <StreakTracker data={data.streak} />
         </div>
       </section>
-
-      {SHOW_PLACEHOLDER_SECTIONS && (
-        <section className="mt-8">
-          <Eyebrow>Achievements</Eyebrow>
-          <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {data.achievements.map((achievement) => (
-              <AchievementBadge key={achievement.title} data={achievement} />
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
