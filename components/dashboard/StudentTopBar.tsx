@@ -1,19 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { GraduationCap, LogOut, ShoppingCart, User } from "lucide-react";
+import { GraduationCap, House, LogOut, ShoppingCart, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
 import { logoutAction } from "@/actions/auth";
 import { SSO_PUBLIC_HOME_ORIGIN } from "@/lib/sso";
+import { cn } from "@/lib/utils";
 
 // Mirrors the contents-lab pill top bar so the student home shares the look of
 // the public landing page. "My Learning" is the single primary destination.
 export default function StudentTopBar() {
   const { user } = useUser();
+  const pathname = usePathname();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [isSigningOut, startSignOut] = useTransition();
@@ -47,8 +49,23 @@ export default function StudentTopBar() {
 
           <nav className="hidden items-center gap-6 lg:gap-8 lg:flex">
             <Link
+              href="/home"
+              aria-current={pathname === "/home" ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase transition-colors",
+                pathname === "/home" ? "text-blue-400" : "text-black hover:text-blue-400"
+              )}
+            >
+              <House size={14} strokeWidth={2} />
+              Home
+            </Link>
+            <Link
               href="/dashboard"
-              className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-black uppercase transition-colors hover:text-blue-400"
+              aria-current={pathname.startsWith("/dashboard") ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase transition-colors",
+                pathname.startsWith("/dashboard") ? "text-blue-400" : "text-black hover:text-blue-400"
+              )}
             >
               <GraduationCap size={14} strokeWidth={2} />
               My Learning

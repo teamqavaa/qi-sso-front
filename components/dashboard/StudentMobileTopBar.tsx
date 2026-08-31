@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useTransition } from "react";
-import { LogOut, User } from "lucide-react";
+import { BookOpen, GraduationCap, House, LogOut, Route, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/context/UserContext";
 import { logoutAction } from "@/actions/auth";
+import { cn } from "@/lib/utils";
 
 // Lightweight mobile bar: logo, avatar, and a drawer for the nav links. Kept
 // separate from the desktop pill bar because small screens need a compact tap
 // target instead of a wide search input.
 export default function StudentMobileTopBar() {
   const { user } = useUser();
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSigningOut, startSignOut] = useTransition();
 
@@ -63,24 +66,51 @@ export default function StudentMobileTopBar() {
         <div className="fixed inset-0 top-[61px] z-30 bg-white p-6 md:hidden">
           <nav className="flex flex-col gap-4 text-lg font-bold">
             <Link
+              href="/home"
+              onClick={() => setIsMenuOpen(false)}
+              aria-current={pathname === "/home" ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2 border-b border-neutral-100 py-2",
+                pathname === "/home" ? "text-blue-400" : "text-neutral-900"
+              )}
+            >
+              <House className="h-5 w-5" />
+              Home
+            </Link>
+            <Link
               href="/dashboard"
               onClick={() => setIsMenuOpen(false)}
-              className="border-b border-neutral-100 py-2"
+              aria-current={pathname.startsWith("/dashboard") ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2 border-b border-neutral-100 py-2",
+                pathname.startsWith("/dashboard") ? "text-blue-400" : "text-neutral-900"
+              )}
             >
+              <GraduationCap className="h-5 w-5" />
               My Learning
             </Link>
             <Link
               href="/courses"
               onClick={() => setIsMenuOpen(false)}
-              className="border-b border-neutral-100 py-2"
+              aria-current={pathname === "/courses" ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2 border-b border-neutral-100 py-2",
+                pathname === "/courses" ? "text-blue-400" : "text-neutral-900"
+              )}
             >
+              <BookOpen className="h-5 w-5" />
               Courses
             </Link>
             <Link
               href="/learning-path"
               onClick={() => setIsMenuOpen(false)}
-              className="border-b border-neutral-100 py-2"
+              aria-current={pathname.startsWith("/learning-path") ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2 border-b border-neutral-100 py-2",
+                pathname.startsWith("/learning-path") ? "text-blue-400" : "text-neutral-900"
+              )}
             >
+              <Route className="h-5 w-5" />
               Tracks
             </Link>
             <button
