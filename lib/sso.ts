@@ -6,6 +6,9 @@ export const SSO_ADMIN_ORIGIN = process.env.SSO_ADMIN_ORIGIN ?? "http://localhos
 // Public marketing homepage (contents-lab). Logout lands here rather than on the
 // SSO login page so a signed-out user sees the public site, not a form.
 export const SSO_PUBLIC_HOME_ORIGIN = process.env.SSO_PUBLIC_HOME_ORIGIN ?? "http://localhost:3000";
+// Identity provider. Login, registration, profile and token refresh all live
+// on the SSO service; consumers only verify its RS256 signature.
+export const SSO_API_URL = process.env.SSO_API_URL ?? "http://localhost:8001";
 
 const ALLOWED_RETURN_ORIGINS = new Set(
   [SSO_RETURN_ORIGIN, SSO_ADMIN_ORIGIN]

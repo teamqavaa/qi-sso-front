@@ -2,8 +2,8 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { COURSES_API_URL } from "@/lib/courses-api";
 import {
+  SSO_API_URL,
   SSO_ADMIN_ORIGIN,
   SSO_PUBLIC_HOME_ORIGIN,
   safeReturnPath,
@@ -32,7 +32,7 @@ export async function loginAction(formData: FormData, next?: string) {
   let redirectUrl: string | null = null;
 
   try {
-    const response = await fetch(`${COURSES_API_URL}/api/auth/login/`, {
+    const response = await fetch(`${SSO_API_URL}/api/auth/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -68,16 +68,21 @@ export async function loginAction(formData: FormData, next?: string) {
     });
 
     // Resolve the role server-side so the action can route staff to the
-    // central admin and students to their dashboard.
+    // central admin and students to their dashboard. The SSO profile carries
+    // both the is_staff flag and the role list; accept either.
     let isStaff = false;
     try {
-      const meResponse = await fetch(`${COURSES_API_URL}/api/users/me/`, {
+      const meResponse = await fetch(`${SSO_API_URL}/api/users/me/`, {
         headers: { Authorization: `Bearer ${data.access}` },
         cache: "no-store",
       });
       if (meResponse.ok) {
         const profile = await meResponse.json();
-        isStaff = Boolean(profile?.is_staff);
+        isStaff =
+          Boolean(profile?.is_staff) ||
+          Array.isArray(profile?.roles) &&
+          profile.roles.includes("admin") ||
+          profile.roles.includes("staff");
       }
     } catch {
       // Role lookup failure must not block login; the student dashboard is
@@ -126,8 +131,8 @@ export async function registerAction(formData: FormData, next?: string) {
   let redirectUrl: string | null = null;
 
   try {
-    // 3. Envoi de la requête POST vers votre UserViewSet
-    const response = await fetch(`${COURSES_API_URL}/api/users/`, {
+    // 3. Envoi de la requête POST vers votre UserViewSet SSO
+    const response = await fetch(`${SSO_API_URL}/api/users/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -189,9 +194,8 @@ export async function getMeAction() {
   }
 
   try {
-    // Appel de l'action 'me' personnalisée de votre UserViewSet Django
-    // On utilise 'web:8000' car la requête part du serveur Next.js vers le conteneur Django
-    const response = await fetch(`${COURSES_API_URL}/api/users/me/`, {
+    // Appel de l'action 'me' personnalisée du UserViewSet SSO
+    const response = await fetch(`${SSO_API_URL}/api/users/me/`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -246,7 +250,7 @@ export async function updateProfileAction(field: string, value: string) {
   }
 
   try {
-    const response = await fetch(`${COURSES_API_URL}/api/users/me/`, {
+    const response = await fetch(`${SSO_API_URL}/api/users/me/`, {
       method: "PATCH",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
