@@ -1,13 +1,41 @@
-"use client"
-import Image from "next/image";
+"use client";
 
+import Image from "next/image";
 import ssoImg from "@/images/ssoimage.jpg";
 import Register from "./auth/Register";
 import Login from "./auth/Login";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { checkSSOSessionAction } from "@/actions/auth"; // 👈 Import de l'action
 
 export default function AuthHome() {
-    const [authMode, setAuthMode] = useState<"login" | "register">("login")
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const searchParams = useSearchParams();
+
+  const clientId = searchParams.get("client_id");
+  const redirectUri = searchParams.get("redirect_uri");
+  const state = searchParams.get("state");
+  const codeChallenge = searchParams.get("code_challenge");
+  const codeChallengeMethod = searchParams.get("code_challenge_method");
+
+  useEffect(() => {
+    // Si l'utilisateur arrive avec des paramètres OAuth2
+    if (clientId && redirectUri) {
+      checkSSOSessionAction(
+        clientId,
+        redirectUri,
+        codeChallenge,
+        codeChallengeMethod,
+        state
+      ).then((result) => {
+        // Si Django a généré le code avec succès, redirection vers l'App A !
+        if (result?.redirectTo) {
+          window.location.href = result.redirectTo;
+        }
+      });
+    }
+  }, [clientId, redirectUri, state, codeChallenge, codeChallengeMethod]);
+
   return (
     <div className="flex gap-5 w-full min-h-screen bg-slate-50 dark:bg-slate-50">
       <div className="relative hidden w-1/2 overflow-hidden bg-slate-950 lg:block">
@@ -18,9 +46,9 @@ export default function AuthHome() {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-        <div className="absolute bottom-20 left-16 right-16 z-10 text-write">
+        <div className="absolute bottom-20 left-16 right-16 z-10 text-white">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20 backdrop-blur-sm">
-            Ignite Your Futur
+            Ignite Your Future
           </div>
           <p className="mt-4 text-base text-slate-300 leading-relaxed max-w-md">
             Sign in once for seamless, secure access to all your enterprise
@@ -28,14 +56,16 @@ export default function AuthHome() {
           </p>
           <div className="mt-8 border-t border-slate-800 pt-6 text-xs text-slate-400">
             Security Advisory: Ensure that the URL in your address bar
-            corresponds to your organization's official domain.{" "}
+            corresponds to your organization's official domain.
           </div>
         </div>
       </div>
 
-      { authMode === "login" ? (
-        <Login onSwitchToRegister= {() => setAuthMode('register')}/>
-      ): ( <Register onSwitchToLogin= {() => setAuthMode('login')}/>)}
+      {authMode === "login" ? (
+        <Login onSwitchToRegister={() => setAuthMode("register")} />
+      ) : (
+        <Register onSwitchToLogin={() => setAuthMode("login")} />
+      )}
     </div>
   );
 }

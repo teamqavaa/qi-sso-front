@@ -1,36 +1,37 @@
-import { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const publicRoutes = ["/"];
 
 export default function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
 
-  // 1. On récupère le cookie
   const hasToken = request.cookies.has('refresh_token');
 
-  // DÉBOGAGE : Regardez ce message dans votre terminal VS Code / Docker !
-  console.log(`📡 [PROXY] Page demandée: "${pathname}" | Jeton trouvé en BDD/Cookie: ${hasToken}`);
+  // 🚨 DÉTECTION DES PARAMÈTRES OAUTH ENVOYÉS PAR L'APP A
+  const hasOAuthParams = searchParams.has("client_id") || searchParams.has("redirect_uri");
 
   const isPublicRoute = publicRoutes.some((route) =>
     route === "/" ? pathname === "/" : pathname.startsWith(route)
   );
 
-  // CAS 1 : L'utilisateur n'est PAS connecté et tente d'aller sur une page privée
+  // CAS 1 : Non connecté sur route privée -> Redirection vers "/"
   if (!hasToken && !isPublicRoute) {
-    console.log(`🔒 [PROXY] Accès refusé. Redirection vers "/"`);
     const loginUrl = new URL("/", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // CAS 2 : L'utilisateur EST connecté et tente de revenir sur la page de connexion ("/")
+  // CAS 2 : Déjà connecté
   if (hasToken && isPublicRoute) {
-    console.log(`🔑 [PROXY] Déjà connecté. Redirection vers "/dashboard"`);
+    // 🚨 SI LA REQUÊTE CONTIENT OAUTH : Ne PAS rediriger vers /dashboard !
+    if (hasOAuthParams) {
+      return NextResponse.next();
+    }
+
+    // Connexion normale sans OAuth -> Aller au Dashboard
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  console.log(`🟢 [PROXY] Autorisé à charger: "${pathname}"`);
   return NextResponse.next();
 }
 

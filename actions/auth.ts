@@ -312,3 +312,36 @@ export async function loginWithGoogleAction(
     return { error: "Unable to connect to the authentication server." };
   }
 }
+
+
+/**
+ * Action dédiée aux utilisateurs DÉJÀ CONNECTÉS sur le Portail SSO.
+ * Génère le code OAuth2 SSO à partir du cookie access_token existant.
+ */
+export async function checkSSOSessionAction(
+  clientId: string | null,
+  redirectUri: string | null,
+  codeChallenge: string | null = null,
+  codeChallengeMethod: string | null = null,
+  state: string | null = null
+): Promise<AuthActionResult> {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get("access_token")?.value;
+
+  // S'il n'y a pas de jeton d'accès ou pas de paramètres OAuth2, on ne fait rien
+  if (!accessToken || !clientId || !redirectUri) {
+    return { success: true };
+  }
+
+  // On délègue la génération du code d'autorisation SSO à Django
+  const ssoResult = await handleSSORedirection(
+    accessToken,
+    clientId,
+    redirectUri,
+    codeChallenge,
+    codeChallengeMethod,
+    state
+  );
+
+  return ssoResult || { success: true };
+}
