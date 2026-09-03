@@ -23,7 +23,7 @@ export default function CartItemRow({
 
   const remove = () => {
     startTransition(async () => {
-      const result = await removeFromCartAction(item.course);
+      const result = await removeFromCartAction(item.course_details.slug);
       if (result.ok) {
         setItemCount(Math.max(0, itemCount - 1));
         router.refresh();
