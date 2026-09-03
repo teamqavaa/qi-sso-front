@@ -7,6 +7,7 @@ import {
   getCoursePathContextAction,
 } from "@/actions/courses";
 import { getMyCourseProgressAction } from "@/actions/course-progress";
+import { getMyEnrollmentsAction, type Enrollment } from "@/actions/enrollments";
 import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
 import ChecklistGrid from "@/components/dashboard/course-detail/ChecklistGrid";
 import CourseTabs, { type CourseTab } from "@/components/dashboard/course-detail/CourseTabs";
@@ -111,16 +112,20 @@ export default async function CourseDetailPage({
     notFound();
   }
 
-  // Detail, progress, outline and path context are independent reads.
-  const [detail, progress, curriculum, pathContext] = await Promise.all([
+  // Detail, progress, outline, path context and enrollments are independent reads.
+  const [detail, progress, curriculum, pathContext, enrollments] = await Promise.all([
     getCourseAction(summary.id),
     getMyCourseProgressAction(summary.id),
     getCourseCurriculumAction(summary.id),
     getCoursePathContextAction(summary.id),
+    getMyEnrollmentsAction(),
   ]);
 
   const course = detail.course;
   const status = progress.entry?.status ?? "not_started";
+  const isBought = enrollments.enrollments.some(
+    (entry: Enrollment) => entry.course_details?.slug === summary.slug
+  );
   const percent = progress.entry?.progress_percent ?? 0;
   const curriculumData = curriculum.curriculum;
 
@@ -205,6 +210,7 @@ export default async function CourseDetailPage({
             cohortLabel={summary.cohort_label}
             includedItems={includedItems}
             initialStatus={status}
+            isBought={isBought}
           />
         </aside>
       </div>

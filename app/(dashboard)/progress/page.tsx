@@ -167,7 +167,7 @@ export default async function ProgressPage() {
                 Browse courses
               </Link>
               <Link
-                href="/labs"
+                href="/explore-labs"
                 className="rounded-full border border-zinc-300 px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-zinc-400"
               >
                 Explore labs

@@ -101,7 +101,7 @@ export async function getMyCourseProgressAction(
 }
 
 async function postProgressAction(
-  courseId: number,
+  courseId: number | string,
   action: "start" | "complete" | "uncomplete"
 ): Promise<{ ok: boolean; error: string | null }> {
   const headers = await authHeaders();
@@ -123,14 +123,14 @@ async function postProgressAction(
   }
 }
 
-export async function startCourseAction(courseId: number) {
+export async function startCourseAction(courseId: number | string) {
   return postProgressAction(courseId, "start");
 }
 
-export async function completeCourseAction(courseId: number) {
+export async function completeCourseAction(courseId: number | string) {
   return postProgressAction(courseId, "complete");
 }
 
-export async function uncompleteCourseAction(courseId: number) {
+export async function uncompleteCourseAction(courseId: number | string) {
   return postProgressAction(courseId, "uncomplete");
 }

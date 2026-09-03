@@ -44,7 +44,7 @@ import styles from "@/components/dashboard/Dashboard.module.css";
 const navItems = [
   { id: "home", label: "Home", iconName: "House" as const },
   { id: "dashboard", label: "Dashboard", iconName: "LayoutDashboard" as const },
-  { id: "learning-path", label: "Tracks", iconName: "Route" as const },
+  { id: "learning-path", label: "My Tracks", iconName: "Route" as const },
   { id: "labs", label: "My Labs", iconName: "FlaskConical" as const },
   { id: "courses", label: "My Courses", iconName: "BookOpen" as const },
   { id: "progress", label: "My Progress", iconName: "BarChart2" as const },

@@ -20,13 +20,15 @@ export default function PurchaseCard({
   cohortLabel,
   includedItems,
   initialStatus,
+  isBought,
 }: {
-  courseId: number;
+  courseId: number | string;
   price: string;
   originalPrice: string | null;
   cohortLabel: string;
   includedItems: string[];
   initialStatus: ProgressStatus;
+  isBought: boolean;
 }) {
   const router = useRouter();
   const { itemCount, setItemCount } = useCart();
@@ -74,6 +76,9 @@ export default function PurchaseCard({
     document.getElementById("curriculum")?.scrollIntoView({ behavior: "smooth" });
   }
 
+  const primaryButtonClass =
+    "w-full rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-50";
+
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-6">
       <div className="flex items-baseline gap-3">
@@ -96,34 +101,32 @@ export default function PurchaseCard({
         </p>
       )}
 
-      <div className="mt-5">
-        <button
-          type="button"
-          disabled={pending || added}
-          onClick={addToCart}
-          className="w-full rounded-2xl bg-neutral-900 px-5 py-4 text-sm font-bold text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
-        >
-          {added ? "Added to cart ✓" : "Add To Cart"}
-        </button>
-
-        {status === "not_started" && (
+      <div className="mt-5 flex flex-col gap-3">
+        {!isBought ? (
+          <button
+            type="button"
+            disabled={pending || added}
+            onClick={addToCart}
+            className={primaryButtonClass}
+          >
+            {added ? "Added to cart ✓" : "Add To Cart"}
+          </button>
+        ) : status === "not_started" ? (
           <button
             type="button"
             disabled={pending}
             onClick={() => run(() => startCourseAction(courseId), "in_progress")}
-            className="w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+            className={primaryButtonClass}
           >
-            Enroll now
+            Start learning
           </button>
-        )}
-
-        {status === "in_progress" && (
+        ) : status === "in_progress" ? (
           <>
             <button
               type="button"
               disabled={pending}
               onClick={scrollToCurriculum}
-              className="w-full rounded-full bg-zinc-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+              className={primaryButtonClass}
             >
               Continue learning
             </button>
@@ -131,29 +134,27 @@ export default function PurchaseCard({
               type="button"
               disabled={pending}
               onClick={() => run(() => completeCourseAction(courseId), "completed")}
-              className="mt-3 w-full text-xs text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
+              className="w-full text-xs text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
             >
               Mark course complete
             </button>
           </>
-        )}
-
-        {status === "completed" && (
+        ) : (
           <>
-            <span className="flex w-full items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-100 px-5 py-3 text-sm font-bold text-foreground">
+            <span className="flex w-full items-center justify-center gap-2 rounded-full border border-zinc-200 bg-zinc-100 px-5 py-2.5 text-sm font-bold text-foreground">
               <Check size={16} strokeWidth={2.5} /> Completed
             </span>
             <button
               type="button"
               disabled={pending}
               onClick={() => run(() => uncompleteCourseAction(courseId), "in_progress")}
-              className="mt-3 w-full text-xs text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
+              className="w-full text-xs text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
             >
               Undo completion
             </button>
           </>
         )}
-        {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+        {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
 
       <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">

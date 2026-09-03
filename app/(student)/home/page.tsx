@@ -26,7 +26,7 @@ function buildKeepGoing(
         title: course.title,
         kind: course.level,
         progress: row.progress_percent,
-        href: `/courses/${course.slug}`,
+        href: `/browse-courses/${course.slug}`,
       };
     });
 }
@@ -77,7 +77,10 @@ export default async function StudentHomePage() {
           title: path.title,
           description: path.description,
           reason: recommendation.reason,
-          href: `/learning-path/${path.kind}/${path.slug}`,
+          href:
+            path.kind === "career"
+              ? `/career-tracks/${path.slug}`
+              : `/skill-tracks`,
           ctaLabel: "Start this track",
         };
       }
@@ -88,7 +91,7 @@ export default async function StudentHomePage() {
           title: course.title,
           description: course.subtitle || course.description,
           reason: recommendation.reason,
-          href: `/courses/${course.slug}`,
+          href: `/browse-courses/${course.slug}`,
           ctaLabel: "View course",
         };
       }
@@ -98,7 +101,7 @@ export default async function StudentHomePage() {
       title: course.title,
       kind: course.level,
       duration: formatDuration(course.duration_minutes),
-      href: `/courses/${course.slug}`,
+      href: `/browse-courses/${course.slug}`,
     })),
     keepGoing: buildKeepGoing(progressResult.progress, titlesById),
   };

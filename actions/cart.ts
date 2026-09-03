@@ -73,7 +73,7 @@ export async function addToCartAction(courseId: number | string): Promise<Mutati
     const res = await fetch(`${COURSES_API_URL}/api/carts/add-item/`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ course_id: Number(courseId) }),
+      body: JSON.stringify({ course_id: String(courseId).trim() }),
       cache: "no-store",
     });
     if (!res.ok) {
@@ -93,7 +93,9 @@ export async function removeFromCartAction(courseId: number | string): Promise<M
   }
   try {
     const res = await fetch(
-      `${COURSES_API_URL}/api/carts/remove-item/?course_id=${Number(courseId)}`,
+      `${COURSES_API_URL}/api/carts/remove-item/?course_id=${encodeURIComponent(
+        String(courseId).trim()
+      )}`,
       { method: "DELETE", headers, cache: "no-store" }
     );
     if (!res.ok) {

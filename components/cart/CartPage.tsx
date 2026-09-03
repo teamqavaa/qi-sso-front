@@ -1,7 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { ShoppingCart } from "lucide-react";
 
 import CartItemRow from "./CartItemRow";
+import { checkoutAction } from "@/actions/orders";
+import { initiatePaymentAction } from "@/actions/payments";
 import type { Cart } from "@/actions/cart";
 
 export default function CartPage({
@@ -13,7 +19,28 @@ export default function CartPage({
   error: string | null;
   hrefBase?: string;
 }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
   const isEmpty = !cart || cart.items.length === 0;
+
+  function proceedToCheckout() {
+    setCheckoutError(null);
+    startTransition(async () => {
+      const checkout = await checkoutAction();
+      if (!checkout.order) {
+        setCheckoutError(checkout.error ?? "Checkout failed.");
+        return;
+      }
+      const payment = await initiatePaymentAction(checkout.order.id);
+      if (!payment.payment?.transaction_reference) {
+        setCheckoutError(payment.error ?? "Could not start payment.");
+        return;
+      }
+      router.push(`/qavaa?tx=${encodeURIComponent(payment.payment.transaction_reference)}`);
+    });
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6 py-6 sm:px-8">
@@ -68,11 +95,16 @@ export default function CartPage({
             </div>
             <button
               type="button"
-              className="w-full rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700 sm:w-auto"
+              onClick={proceedToCheckout}
+              disabled={pending}
+              className="w-full rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
-              Proceed to checkout
+              {pending ? "Redirecting…" : "Proceed to checkout"}
             </button>
           </div>
+          {checkoutError && (
+            <p className="mt-3 text-xs text-red-600">{checkoutError}</p>
+          )}
         </>
       )}
     </div>

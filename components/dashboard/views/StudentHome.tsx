@@ -74,7 +74,7 @@ export default function StudentHome({ data }: { data: StudentHomeData }) {
         {/* Upskilling: tracks entry points. */}
         <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Link
-            href="/learning-path/skill"
+            href="/skill-tracks"
             className="flex items-center justify-between rounded-3xl border border-neutral-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
           >
             <div>
@@ -86,7 +86,7 @@ export default function StudentHome({ data }: { data: StudentHomeData }) {
             <Route size={18} strokeWidth={1.5} className="text-blue-400" />
           </Link>
           <Link
-            href="/learning-path/career"
+            href="/career-tracks"
             className="flex items-center justify-between rounded-3xl border border-neutral-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
           >
             <div>
@@ -108,7 +108,7 @@ export default function StudentHome({ data }: { data: StudentHomeData }) {
                 Hands-on environments. Practice by doing, not watching.
               </p>
               <Link
-                href="/labs"
+                href="/explore-labs"
                 className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-blue-400 px-5 py-2.5 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-neutral-800"
               >
                 Go to labs
@@ -125,7 +125,7 @@ export default function StudentHome({ data }: { data: StudentHomeData }) {
                 Pick a track, plan your week, and watch your streak grow.
               </p>
               <Link
-                href="/learning-path"
+                href="/all-tracks"
                 className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-blue-400 px-5 py-2.5 text-xs font-bold tracking-wider text-white uppercase transition-colors hover:bg-neutral-800"
               >
                 View tracks
@@ -178,7 +178,7 @@ export default function StudentHome({ data }: { data: StudentHomeData }) {
           <div className="flex items-center justify-between">
             <Eyebrow>Discover courses</Eyebrow>
             <Link
-              href="/courses"
+              href="/browse-courses"
               className="group inline-flex items-center gap-2 text-sm font-semibold text-neutral-900 transition-colors hover:text-neutral-600"
             >
               Browse all

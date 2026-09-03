@@ -41,7 +41,13 @@ function TopAffordance({ step }: { step: DerivedStep }) {
   );
 }
 
-export function RoadmapStep({ step }: { step: DerivedStep }) {
+export function RoadmapStep({
+  step,
+  courseLinkBase = "/courses",
+}: {
+  step: DerivedStep;
+  courseLinkBase?: string;
+}) {
   const { course, state, percent } = step;
 
   const body = (
@@ -118,7 +124,7 @@ export function RoadmapStep({ step }: { step: DerivedStep }) {
       {state === "locked" ? (
         <div className={cardClasses}>{body}</div>
       ) : (
-        <Link href={`/courses/${course.slug}`} className={cn(cardClasses, "block")}>
+        <Link href={`${courseLinkBase}/${course.slug}`} className={cn(cardClasses, "block")}>
           {body}
         </Link>
       )}

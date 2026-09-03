@@ -9,6 +9,7 @@ import { getMeAction, clearAuthCookies } from "@/actions/auth";
 import type { User } from "@/types/user";
 import StudentTopBar from "@/components/dashboard/StudentTopBar";
 import StudentMobileTopBar from "@/components/dashboard/StudentMobileTopBar";
+import StudentPageNav from "@/components/dashboard/StudentPageNav";
 import Footer from "@/components/footer/Footer";
 
 // The student home uses the public-homepage pill top bar on desktop and a
@@ -32,7 +33,10 @@ export default function StudentHomeShell({
           <StudentMobileTopBar />
           <main className="flex flex-1 flex-col">
             {/* Offset below the fixed bars; the pill bar is taller on desktop. */}
-            <div className="pt-24 md:pt-24">{children}</div>
+            <div className="pt-24 md:pt-24">
+              <StudentPageNav />
+              {children}
+            </div>
           </main>
           <Footer />
         </div>

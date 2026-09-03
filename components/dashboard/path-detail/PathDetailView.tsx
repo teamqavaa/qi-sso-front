@@ -12,16 +12,24 @@ import {
 } from "@/components/dashboard/path-detail/SidebarCard";
 import { PathIconBadge } from "@/components/dashboard/path-detail/PathIconBadge";
 import { getPathIcon } from "@/components/dashboard/path-icons";
-import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
+import PageBreadcrumbs, {
+  type PageCrumb,
+} from "@/components/dashboard/PageBreadcrumbs";
 import { buildProgressMap, deriveSteps } from "@/lib/path-status";
 
-// One detail view for every path kind; routes only pick the kind.
+// One detail view for every path kind; routes only pick the kind. Overrides
+// let the student-home shell reuse the same view with its own breadcrumbs and
+// course-detail links (e.g. routed through the browse-courses student page).
 export default async function PathDetailView({
   kind,
   slug,
+  crumbs,
+  courseLinkBase = "/courses",
 }: {
   kind: "career" | "skill";
   slug: string;
+  crumbs?: PageCrumb[];
+  courseLinkBase?: string;
 }) {
   // Unknown slug is only a real 404 when the API answered; an API outage
   // must degrade to the coming-soon state instead of a broken page.
@@ -34,15 +42,17 @@ export default async function PathDetailView({
     notFound();
   }
 
-  const crumbs = [
-    { label: "Tracks", href: "/learning-path" },
-    { label: kind === "career" ? "Career" : "Skill", href: `/learning-path/${kind}` },
-    { label: summary.title, href: `/learning-path/${kind}/${slug}` },
-  ];
+  const crumbsToRender =
+    crumbs ??
+    [
+      { label: "Tracks", href: "/learning-path" },
+      { label: kind === "career" ? "Career" : "Skill", href: `/learning-path/${kind}` },
+      { label: summary.title, href: `/learning-path/${kind}/${slug}` },
+    ];
 
   const { detail } = await getPathDetailAction(summary.id);
   if (!detail) {
-    return <ComingSoon breadcrumbs={<PageBreadcrumbs className="mb-6" items={crumbs} />} />;
+    return <ComingSoon breadcrumbs={<PageBreadcrumbs className="mb-6" items={crumbsToRender} />} />;
   }
 
   const { progress } = await getMyPathProgressAction(slug);
@@ -64,7 +74,7 @@ export default async function PathDetailView({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-8 py-10">
-      <PageBreadcrumbs className="mb-6" items={crumbs} />
+      <PageBreadcrumbs className="mb-6" items={crumbsToRender} />
       {/* Header */}
       <PathIconBadge icon={getPathIcon(detail.kind, detail.icon)} />
       <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
@@ -89,7 +99,7 @@ export default async function PathDetailView({
               <div aria-hidden className="absolute bottom-5 left-[17px] top-5 w-px bg-zinc-200" />
               <ol className="space-y-4">
                 {steps.map((step) => (
-                  <RoadmapStep key={step.course.id} step={step} />
+                  <RoadmapStep key={step.course.id} step={step} courseLinkBase={courseLinkBase} />
                 ))}
               </ol>
             </div>

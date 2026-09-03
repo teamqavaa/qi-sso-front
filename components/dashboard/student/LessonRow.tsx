@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +13,22 @@ export function LessonRow({
   data: LessonRowData;
   onOpen?: () => void;
 }) {
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (onOpen) {
+      onOpen();
+    } else if (data.href) {
+      router.push(data.href);
+    }
+  };
+
   return (
     // A full-width ghost button gives each row a large tap target on touch screens.
     <Button
       type="button"
       variant="ghost"
-      onClick={onOpen}
+      onClick={handleClick}
       className="h-auto w-full justify-start gap-3 rounded-lg px-2 py-2.5"
     >
       <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
