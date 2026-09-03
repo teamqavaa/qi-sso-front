@@ -9,6 +9,8 @@ import {
   startCourseAction,
   uncompleteCourseAction,
 } from "@/actions/course-progress";
+import { addToCartAction } from "@/actions/cart";
+import { useCart } from "@/context/CartContext";
 import type { ProgressStatus } from "@/actions/course-progress";
 
 export default function PurchaseCard({
@@ -27,9 +29,25 @@ export default function PurchaseCard({
   initialStatus: ProgressStatus;
 }) {
   const router = useRouter();
+  const { itemCount, setItemCount } = useCart();
   const [status, setStatus] = useState<ProgressStatus>(initialStatus);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [added, setAdded] = useState(false);
+
+  function addToCart() {
+    setError(null);
+    startTransition(async () => {
+      const result = await addToCartAction(courseId);
+      if (result.ok) {
+        setAdded(true);
+        setItemCount(itemCount + 1);
+        router.refresh();
+      } else {
+        setError(result.error ?? "Could not add to cart.");
+      }
+    });
+  }
 
   const current = Number(price) || 0;
   const original = originalPrice != null ? Number(originalPrice) : null;
@@ -79,6 +97,15 @@ export default function PurchaseCard({
       )}
 
       <div className="mt-5">
+        <button
+          type="button"
+          disabled={pending || added}
+          onClick={addToCart}
+          className="w-full rounded-2xl bg-neutral-900 px-5 py-4 text-sm font-bold text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
+        >
+          {added ? "Added to cart ✓" : "Add To Cart"}
+        </button>
+
         {status === "not_started" && (
           <button
             type="button"

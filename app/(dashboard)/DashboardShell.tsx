@@ -14,6 +14,7 @@ import {
   Menu,
   Route,
   House,
+  Bell,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -96,7 +97,7 @@ function Sidebar({
     navSegment === "learning-path" ? "learning-path" : null
   );
 
-  const initials = getInitials(user?.display_name || user?.full_name);
+  const initials = getInitials(user?.full_name || user?.display_name);
   const location = user?.city
     ? `${user.city.toUpperCase()}, ${user.country?.toUpperCase() ?? ""}`
     : user?.country?.toUpperCase();
@@ -135,7 +136,7 @@ function Sidebar({
             </Avatar>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium leading-tight">
-                {user?.display_name || user?.full_name || "User"}
+                {user?.full_name || user?.display_name || "User"}
               </p>
               <p className="mt-0.5 font-mono text-[10px] uppercase tracking-widest text-white/60">
                 {location ? `${location} · ${lowercase(user?.language)}` : ""}
@@ -285,7 +286,7 @@ function Header({
   const [isSigningOut, startSignOut] = useTransition();
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  const initials = getInitials(user?.display_name || user?.full_name);
+  const initials = getInitials(user?.full_name || user?.display_name);
 
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
@@ -378,7 +379,7 @@ function Header({
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuLabel>
-              {user?.display_name || user?.full_name || "User"}
+              {user?.full_name || user?.display_name || "User"}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -386,6 +387,15 @@ function Header({
             >
               <Settings size={15} strokeWidth={1.5} />
               Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              // Notifications aren't wired to the backend yet, so this item is
+              // present but inert — it will become a real link/router.push once
+              // the notifications feature is implemented.
+              className="text-muted-foreground"
+            >
+              <Bell size={15} strokeWidth={1.5} />
+              Notifications
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => startSignOut(() => logoutAction())}

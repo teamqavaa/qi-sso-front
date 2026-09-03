@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getMeAction } from "@/actions/auth";
+import { getCartAction } from "@/actions/cart";
 import StudentHomeShell from "@/components/dashboard/StudentHomeShell";
 
 export default async function StudentHomeLayout({
@@ -15,8 +16,16 @@ export default async function StudentHomeLayout({
     redirect("/");
   }
 
-  // Hydrate the profile server-side so the home page can greet by name.
-  const { user } = await getMeAction();
+  // Hydrate the profile server-side so the home page can greet by name, and
+  // read the cart item count so the pill-bar badge renders for signed-in users.
+  const [{ user }, cart] = await Promise.all([
+    getMeAction(),
+    getCartAction(),
+  ]);
 
-  return <StudentHomeShell initialUser={user}>{children}</StudentHomeShell>;
+  return (
+    <StudentHomeShell initialUser={user} initialCartItemCount={cart.cart?.items_count ?? 0}>
+      {children}
+    </StudentHomeShell>
+  );
 }

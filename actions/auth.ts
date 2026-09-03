@@ -194,8 +194,10 @@ export async function getMeAction() {
   }
 
   try {
-    // Appel de l'action 'me' personnalisée du UserViewSet SSO
-    const response = await fetch(`${SSO_API_URL}/api/users/me/`, {
+    // Appel de l'action 'me' du UserProfileViewSet SSO. Returns the editable
+    // profile fields (full_name, bio, birth_date, language, avatar) that the
+    // frontend reads; /api/users/me/ only exposes login/identity fields.
+    const response = await fetch(`${SSO_API_URL}/api/profile/me/`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -250,7 +252,7 @@ export async function updateProfileAction(field: string, value: string) {
   }
 
   try {
-    const response = await fetch(`${SSO_API_URL}/api/users/me/`, {
+    const response = await fetch(`${SSO_API_URL}/api/profile/me/`, {
       method: "PATCH",
       headers: {
         "Authorization": `Bearer ${accessToken}`,

@@ -4,31 +4,39 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { UserProvider, useUser } from "@/context/UserContext";
+import { CartProvider } from "@/context/CartContext";
 import { getMeAction, clearAuthCookies } from "@/actions/auth";
 import type { User } from "@/types/user";
 import StudentTopBar from "@/components/dashboard/StudentTopBar";
 import StudentMobileTopBar from "@/components/dashboard/StudentMobileTopBar";
+import Footer from "@/components/footer/Footer";
 
 // The student home uses the public-homepage pill top bar on desktop and a
-// compact bar on mobile. Both carry the same nav links and profile avatar.
+// compact bar on mobile. Both carry the same nav links and profile avatar,
+// and the shared QI Ignite footer below the content.
 export default function StudentHomeShell({
   initialUser,
+  initialCartItemCount,
   children,
 }: {
   initialUser: User | null;
+  initialCartItemCount?: number;
   children: React.ReactNode;
 }) {
   return (
     <UserProvider initialUser={initialUser}>
-      <HomeUserHydrator />
-      <div className="flex min-h-dvh w-full flex-col bg-zinc-50">
-        <StudentTopBar />
-        <StudentMobileTopBar />
-        <main className="flex-1">
-          {/* Offset below the fixed bars; the pill bar is taller on desktop. */}
-          <div className="pt-24 md:pt-24">{children}</div>
-        </main>
-      </div>
+      <CartProvider initialItemCount={initialCartItemCount ?? 0}>
+        <HomeUserHydrator />
+        <div className="flex min-h-dvh w-full flex-col bg-zinc-50">
+          <StudentTopBar />
+          <StudentMobileTopBar />
+          <main className="flex flex-1 flex-col">
+            {/* Offset below the fixed bars; the pill bar is taller on desktop. */}
+            <div className="pt-24 md:pt-24">{children}</div>
+          </main>
+          <Footer />
+        </div>
+      </CartProvider>
     </UserProvider>
   );
 }

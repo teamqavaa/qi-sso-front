@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Search } from "lucide-react";
 
 import CourseCard, {
@@ -14,7 +13,6 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import type { LearningPath } from "@/types/career-path";
 import type { Course } from "@/types/course";
 
 type LevelFilter = "all" | "beginner" | "intermediate" | "advanced";
@@ -42,17 +40,15 @@ function matchesQuery(haystacks: (string | null)[], query: string): boolean {
   return haystacks.some((value) => value?.toLowerCase().includes(needle));
 }
 
-// Catalog lives fully client-side: the list is small, so filtering and
-// sorting stay instant instead of round-tripping through searchParams.
+// "My Courses" is the enrolled-courses list, so filtering and sorting apply
+// only to the caller's own enrollments (kept client-side for instant UX).
 export default function CoursesBrowser({
   courses,
-  paths,
   initialQuery,
   progressByCourseId,
   hasError,
 }: {
   courses: Course[];
-  paths: LearningPath[];
   initialQuery?: string;
   progressByCourseId: Map<number, CardProgress>;
   hasError: boolean;
@@ -86,20 +82,15 @@ export default function CoursesBrowser({
     return sorted;
   }, [courses, level, sortBy, query]);
 
-  const visiblePaths = useMemo(
-    () =>
-      paths.filter((path) =>
-        matchesQuery([path.title, path.description], query)
-      ),
-    [paths, query]
-  );
-
-  const searching = query.trim().length > 0;
-
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Courses</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          My Courses
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Courses you&apos;re enrolled in.
+        </p>
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="relative">
             <Search
@@ -111,8 +102,8 @@ export default function CoursesBrowser({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search courses and paths..."
-              aria-label="Search courses and paths"
+              placeholder="Search your courses..."
+              aria-label="Search your courses"
               className="h-8 w-full sm:w-56 rounded-full bg-zinc-100 pl-8 text-sm"
             />
           </div>
@@ -161,39 +152,20 @@ export default function CoursesBrowser({
         </div>
       </div>
 
-      {hasError || courses.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No courses available.</p>
+      {hasError ? (
+        <p className="text-sm text-red-600">
+          We couldn&apos;t load your courses. Please try again.
+        </p>
+      ) : courses.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          You aren&apos;t enrolled in any courses yet. Browse the catalog to get
+          started.
+        </p>
       ) : (
         <>
-          {searching && visiblePaths.length > 0 && (
-            <section className="mb-6">
-              <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Paths
-              </h2>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {visiblePaths.map((path) => (
-                  <Link
-                    key={path.id}
-                    href={`/learning-path/${path.kind}/${path.slug}`}
-                    className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-card px-3 py-2 transition-colors hover:border-zinc-300"
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
-                        {path.kind} path · {path.course_count} courses
-                      </span>
-                      <span className="text-sm font-medium text-foreground">
-                        {path.title}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
           {visibleCourses.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No courses or paths match your search.
+              No courses match your search.
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

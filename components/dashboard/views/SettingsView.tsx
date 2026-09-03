@@ -6,7 +6,7 @@ import { useUser } from "@/context/UserContext";
 import { updateProfileAction } from "@/actions/auth";
 import type { User } from "@/types/user";
 
-type EditableFields = "full_name" | "display_name" | "bio" | "birth_date" | "city" | "country" | "language";
+type EditableFields = "full_name" | "bio" | "birth_date" | "language";
 
 export default function SettingsView({ initialUser }: { initialUser: User | null }) {
   const { user: contextUser, updateUser } = useUser();
@@ -28,11 +28,8 @@ export default function SettingsView({ initialUser }: { initialUser: User | null
 
   const fields: { key: EditableFields; label: string; value: string | null }[] = [
     { key: "full_name", label: "Full Name", value: user.full_name },
-    { key: "display_name", label: "Display Name", value: user.display_name },
     { key: "bio", label: "Bio", value: user.bio },
     { key: "birth_date", label: "Birth Date", value: user.birth_date },
-    { key: "city", label: "City", value: user.city },
-    { key: "country", label: "Country", value: user.country },
     { key: "language", label: "Language", value: user.language },
   ];
 
@@ -60,7 +57,7 @@ export default function SettingsView({ initialUser }: { initialUser: User | null
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">Avatar</p>
         <div className="flex flex-wrap items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-[#007bff]/10 flex items-center justify-center text-[#007bff] font-semibold text-lg flex-shrink-0">
-            {(user.display_name || user.full_name || "User")
+            {(user.full_name || "User")
               .split(" ")
               .map((n) => n[0])
               .join("")
@@ -69,7 +66,7 @@ export default function SettingsView({ initialUser }: { initialUser: User | null
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">{user.full_name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">@{user.display_name}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{user.email}</p>
           </div>
           <button className="text-xs text-[#007bff] border border-[#007bff]/30 px-3 py-1.5 rounded-lg hover:bg-[#007bff]/5 transition-colors">
             Change photo

@@ -51,7 +51,7 @@ function Eyebrow({ children }: { children: ReactNode }) {
 
 export default function StudentHome({ data }: { data: StudentHomeData }) {
   const { user } = useUser();
-  const firstName = user?.display_name?.split(" ")[0] || user?.full_name?.split(" ")[0] || "there";
+  const firstName = user?.full_name?.split(" ")[0] || user?.display_name?.split(" ")[0] || "there";
 
   return (
     <div className="w-full">

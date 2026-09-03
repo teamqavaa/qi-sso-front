@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250">
+  <rect width="400" height="250" fill="#e2e8f0"/>
+  <rect x="1" y="1" width="398" height="248" fill="none" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="200" y="120" font-family="monospace" font-size="16" fill="#94a3b8" text-anchor="middle">QI</text>
+  <text x="200" y="142" font-family="monospace" font-size="10" fill="#94a3b8" text-anchor="middle">COURSE</text>
+</svg>

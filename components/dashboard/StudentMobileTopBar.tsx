@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useTransition } from "react";
-import { BookOpen, GraduationCap, House, LogOut, Route, User } from "lucide-react";
+import { Bell, BookOpen, Briefcase, GraduationCap, LogOut, Settings, ShoppingCart, User } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import SearchTrigger from "@/components/search/SearchTrigger";
 import { useUser } from "@/context/UserContext";
+import { useCart } from "@/context/CartContext";
 import { logoutAction } from "@/actions/auth";
 import { cn } from "@/lib/utils";
 
@@ -16,11 +17,12 @@ import { cn } from "@/lib/utils";
 // target instead of a wide search input.
 export default function StudentMobileTopBar() {
   const { user } = useUser();
+  const { itemCount } = useCart();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSigningOut, startSignOut] = useTransition();
 
-  const displayName = user?.display_name || user?.full_name || "";
+  const displayName = user?.full_name || user?.display_name || "";
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -45,6 +47,14 @@ export default function StudentMobileTopBar() {
               </AvatarFallback>
             </Avatar>
             <SearchTrigger />
+            {/* Notification bell — inert until the notifications backend is wired. */}
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="flex size-10 items-center justify-center rounded-full bg-neutral-100 text-neutral-800 transition-colors"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
             <button
               type="button"
               onClick={() => setIsMenuOpen((open) => !open)}
@@ -68,18 +78,6 @@ export default function StudentMobileTopBar() {
         <div className="fixed inset-0 top-[61px] z-30 bg-white p-6 md:hidden">
           <nav className="flex flex-col gap-4 text-lg font-bold">
             <Link
-              href="/home"
-              onClick={() => setIsMenuOpen(false)}
-              aria-current={pathname === "/home" ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-2 border-b border-neutral-100 py-2",
-                pathname === "/home" ? "text-blue-400" : "text-neutral-900"
-              )}
-            >
-              <House className="h-5 w-5" />
-              Home
-            </Link>
-            <Link
               href="/dashboard"
               onClick={() => setIsMenuOpen(false)}
               aria-current={pathname.startsWith("/dashboard") ? "page" : undefined}
@@ -92,28 +90,63 @@ export default function StudentMobileTopBar() {
               My Learning
             </Link>
             <Link
-              href="/courses"
+              href="/browse-courses"
               onClick={() => setIsMenuOpen(false)}
-              aria-current={pathname === "/courses" ? "page" : undefined}
+              aria-current={
+                pathname === "/browse-courses" || pathname.startsWith("/browse-courses/")
+                  ? "page"
+                  : undefined
+              }
               className={cn(
                 "flex items-center gap-2 border-b border-neutral-100 py-2",
-                pathname === "/courses" ? "text-blue-400" : "text-neutral-900"
+                pathname === "/browse-courses" || pathname.startsWith("/browse-courses/")
+                  ? "text-blue-400"
+                  : "text-neutral-900"
               )}
             >
               <BookOpen className="h-5 w-5" />
-              Courses
+              Browse Courses
             </Link>
             <Link
-              href="/learning-path"
+              href="/cart"
               onClick={() => setIsMenuOpen(false)}
-              aria-current={pathname.startsWith("/learning-path") ? "page" : undefined}
+              aria-current={pathname === "/cart" ? "page" : undefined}
               className={cn(
                 "flex items-center gap-2 border-b border-neutral-100 py-2",
-                pathname.startsWith("/learning-path") ? "text-blue-400" : "text-neutral-900"
+                pathname === "/cart" ? "text-blue-400" : "text-neutral-900"
               )}
             >
-              <Route className="h-5 w-5" />
-              Tracks
+              <ShoppingCart className="h-5 w-5" />
+              Cart
+              {itemCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-neutral-900 px-1.5 text-[10px] font-bold text-white">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/careers"
+              onClick={() => setIsMenuOpen(false)}
+              aria-current={pathname.startsWith("/careers") ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2 border-b border-neutral-100 py-2",
+                pathname.startsWith("/careers") ? "text-blue-400" : "text-neutral-900"
+              )}
+            >
+              <Briefcase className="h-5 w-5" />
+              Explore Careers
+            </Link>
+            <Link
+              href="/home/settings"
+              onClick={() => setIsMenuOpen(false)}
+              aria-current={pathname.startsWith("/home/settings") ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2 border-b border-neutral-100 py-2",
+                pathname.startsWith("/home/settings") ? "text-blue-400" : "text-neutral-900"
+              )}
+            >
+              <Settings className="h-5 w-5" />
+              Settings
             </Link>
             <button
               type="button"
