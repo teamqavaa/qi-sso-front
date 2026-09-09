@@ -77,29 +77,30 @@ export default function PurchaseCard({
   }
 
   const primaryButtonClass =
-    "w-full rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-neutral-700 disabled:opacity-50";
+    "w-full rounded-full bg-blue-400 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-500 disabled:opacity-50";
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-6">
-      <div className="flex items-baseline gap-3">
-        <span className="text-3xl font-bold tracking-tight text-foreground">
-          ${price.replace(/\.00$/, "")}
-        </span>
-        {original != null && (
-          <span className="text-base text-muted-foreground line-through">
-            ${originalPrice?.replace(/\.00$/, "")}
+    <div className="sticky top-8 z-10 flex w-full flex-col gap-6 rounded-3xl border border-neutral-200 bg-white p-6 font-mono shadow-xs sm:p-8">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-baseline gap-3">
+          <span className="text-4xl font-extrabold text-neutral-900">
+            ${price.replace(/\.00$/, "")}
           </span>
+          {original != null && (
+            <span className="text-lg font-normal text-neutral-400 line-through">
+              ${originalPrice?.replace(/\.00$/, "")}
+            </span>
+          )}
+        </div>
+
+        {(discountPercent != null || cohortLabel) && (
+          <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+            {discountPercent != null ? `${discountPercent}% off` : ""}
+            {discountPercent != null && cohortLabel ? " · " : ""}
+            {cohortLabel}
+          </p>
         )}
       </div>
-
-      {/* Reserved accent color: the only non-monochrome element on the page. */}
-      {(discountPercent != null || cohortLabel) && (
-        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-[#b45309]">
-          {discountPercent != null ? `${discountPercent}% off` : ""}
-          {discountPercent != null && cohortLabel ? " · " : ""}
-          {cohortLabel}
-        </p>
-      )}
 
       <div className="mt-5 flex flex-col gap-3">
         {!isBought ? (
@@ -157,17 +158,17 @@ export default function PurchaseCard({
         {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
 
-      <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
         What&apos;s included
       </p>
-      <ul className="mt-3 space-y-2.5">
+      <div className="flex flex-col gap-2.5 pt-1 text-xs font-semibold text-neutral-800">
         {includedItems.map((item) => (
-          <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-foreground">
-            <Check size={14} strokeWidth={2.5} className="mt-1 shrink-0" aria-hidden />
+          <div key={item} className="flex items-center gap-2.5">
+            <span className="font-bold text-neutral-900">✓</span>
             <span>{item}</span>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

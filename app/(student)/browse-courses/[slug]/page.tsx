@@ -9,7 +9,7 @@ import {
 import { getMyCourseProgressAction } from "@/actions/course-progress";
 import { getMyEnrollmentsAction, type Enrollment } from "@/actions/enrollments";
 import PageBreadcrumbs from "@/components/dashboard/PageBreadcrumbs";
-import ChecklistGrid from "@/components/dashboard/course-detail/ChecklistGrid";
+import CourseHeaderCard from "@/components/dashboard/course-detail/CourseHeaderCard";
 import CourseTabs, { type CourseTab } from "@/components/dashboard/course-detail/CourseTabs";
 import CurriculumSummaryBar from "@/components/dashboard/course-detail/CurriculumSummaryBar";
 import ModuleGroup from "@/components/dashboard/course-detail/ModuleGroup";
@@ -18,6 +18,9 @@ import PurchaseCard from "@/components/dashboard/course-detail/PurchaseCard";
 import { deriveLessonStates } from "@/lib/lesson-status";
 import { formatDuration } from "@/lib/format";
 import type { CourseBullet } from "@/types/course";
+
+const sectionLabelClass =
+  "text-[11px] font-bold text-neutral-400 tracking-wider uppercase";
 
 function OverviewPanel({
   description,
@@ -29,33 +32,32 @@ function OverviewPanel({
   outcomes: CourseBullet[];
 }) {
   return (
-    <div className="space-y-8">
-      <section>
-        <h2 className="text-base font-bold text-foreground">About this course</h2>
-        <p className="mt-3 max-w-[70ch] text-sm leading-relaxed text-muted-foreground">
-          {description}
-        </p>
-      </section>
-
-      <section className="rounded-xl bg-zinc-100 p-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          Who this is for
-        </p>
-        <p className="mt-2 max-w-[70ch] text-sm leading-relaxed text-foreground">
-          {audience || "Audience notes will appear here soon."}
-        </p>
-      </section>
-
-      <section>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          You&apos;ll learn to
-        </p>
-        <div className="mt-4">
-          <ChecklistGrid
-            items={[...outcomes].sort((a, b) => a.order - b.order).map((item) => item.content)}
-          />
+    <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          <h3 className="text-xl font-bold text-neutral-900">About this course</h3>
+          <p className="text-sm leading-relaxed text-neutral-600">{description}</p>
         </div>
-      </section>
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-neutral-200/80 bg-neutral-50 p-6">
+          <span className={sectionLabelClass}>Who this is for</span>
+          <p className="text-xs leading-relaxed text-neutral-700">
+            {audience || "Audience notes will appear here soon."}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 border-t border-neutral-100 pt-4">
+        <span className={sectionLabelClass}>You&apos;ll learn to</span>
+        <div className="grid grid-cols-1 gap-4 text-xs font-semibold text-neutral-800 sm:grid-cols-2">
+          {[...outcomes].sort((a, b) => a.order - b.order).map((item) => (
+            <div key={item.id} className="flex items-start gap-2.5">
+              <span className="font-bold text-neutral-900">✓</span>
+              <span className="leading-relaxed">{item.content}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -163,55 +165,47 @@ export default async function BrowseCourseDetailPage({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-6 sm:px-8">
-      <PageBreadcrumbs
-        className="mb-6"
-        items={[
-          { label: "Browse Courses", href: "/browse-courses" },
-          { label: summary.title, href: `/browse-courses/${slug}` },
-        ]}
-      />
-      <header>
-        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span>{summary.level}</span>
-          <span aria-hidden>·</span>
-          <span>{summary.language}</span>
-          {summary.duration_minutes > 0 && (
-            <>
-              <span aria-hidden>·</span>
-              <span>{formatDuration(summary.duration_minutes)}</span>
-            </>
-          )}
-        </div>
-        <h1 className="mt-3 max-w-3xl text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          {summary.title}
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{summary.subtitle}</p>
-        {summary.instructor && (
-          <p className="mt-2 text-xs text-muted-foreground">Taught by {summary.instructor}</p>
-        )}
+    <div className="min-h-screen bg-[#f8fafc]">
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <PageBreadcrumbs
+          className="mb-6"
+          items={[
+            { label: "Browse Courses", href: "/browse-courses" },
+            { label: summary.title, href: `/browse-courses/${slug}` },
+          ]}
+        />
         {(error || detail.error) && (
-          <p className="mt-3 text-xs text-red-600">Some course details could not be loaded.</p>
+          <p className="mb-4 text-xs text-red-600">Some course details could not be loaded.</p>
         )}
-      </header>
 
-      <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0 space-y-8">
-          <PathContextCard paths={pathContext.paths} />
-          <CourseTabs tabs={tabs} />
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+          <div className="flex flex-col gap-8 lg:col-span-8">
+            <CourseHeaderCard
+              title={summary.title}
+              subtitle={summary.subtitle}
+              description={course?.description || summary.description || ""}
+              thumbnail={summary.thumbnail}
+              category={course?.category_details?.name ?? null}
+              level={summary.level}
+              language={summary.language}
+              promoVideoUrl={course?.promo_video_url ?? null}
+            />
+            <PathContextCard paths={pathContext.paths} />
+            <CourseTabs tabs={tabs} />
+          </div>
+
+          <div className="lg:col-span-4">
+            <PurchaseCard
+              courseId={summary.id}
+              price={summary.price}
+              originalPrice={summary.original_price}
+              cohortLabel={summary.cohort_label}
+              includedItems={includedItems}
+              initialStatus={status}
+              isBought={isBought}
+            />
+          </div>
         </div>
-
-        <aside className="lg:sticky lg:top-24">
-          <PurchaseCard
-            courseId={summary.id}
-            price={summary.price}
-            originalPrice={summary.original_price}
-            cohortLabel={summary.cohort_label}
-            includedItems={includedItems}
-            initialStatus={status}
-            isBought={isBought}
-          />
-        </aside>
       </div>
     </div>
   );

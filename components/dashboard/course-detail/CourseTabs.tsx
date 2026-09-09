@@ -18,11 +18,11 @@ export default function CourseTabs({ tabs }: { tabs: CourseTab[] }) {
   }
 
   return (
-    <section>
+    <section className="w-full overflow-hidden rounded-3xl border border-neutral-200 bg-white font-mono shadow-xs">
       <div
         role="tablist"
         aria-label="Course sections"
-        className="flex items-center gap-6 border-b border-zinc-200"
+        className="flex gap-8 border-b border-neutral-200 px-6 pt-4"
       >
         {tabs.map((tab) => {
           const isActive = tab.key === active.key;
@@ -33,19 +33,18 @@ export default function CourseTabs({ tabs }: { tabs: CourseTab[] }) {
               type="button"
               aria-selected={isActive}
               onClick={() => setActiveKey(tab.key)}
-              className={`-mb-px border-b-2 pb-3 pt-1 font-mono text-[10px] uppercase tracking-[0.2em] transition-colors ${
-                isActive
-                  ? "border-zinc-900 font-bold text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+              className={`relative cursor-pointer pb-4 text-xs font-bold tracking-wider transition-colors ${
+                isActive ? "text-neutral-900" : "text-neutral-400 hover:text-neutral-600"
               }`}
             >
               {tab.label}
+              {isActive && <span className="absolute bottom-0 left-0 h-0.5 w-full bg-neutral-900" />}
             </button>
           );
         })}
       </div>
 
-      <div role="tabpanel" className="pt-8">
+      <div role="tabpanel" className="flex flex-col gap-8 p-6 sm:p-10">
         {active.content}
       </div>
     </section>

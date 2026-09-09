@@ -16,12 +16,14 @@ export type Course = {
   rating: number | null;
   review_count: number;
   price: string;
+  discount_price?: string | null;
   original_price: string | null;
   cohort_label: string;
   audience: string;
   downloadable_files_count: number;
   created_at: string;
   updated_at: string;
+  category_details?: { id: string; name: string; slug: string } | null;
 };
 
 export type CourseBullet = {
@@ -36,6 +38,8 @@ export type CourseDetail = Course & {
   outcomes: CourseBullet[];
   learning_points: CourseBullet[];
   requirements: CourseBullet[];
+  promo_video_url: string | null;
+  category_details: { id: string; name: string; slug: string } | null;
 };
 
 export type LabActivity = {
