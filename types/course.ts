@@ -38,12 +38,20 @@ export type CourseDetail = Course & {
   requirements: CourseBullet[];
 };
 
+export type LabActivity = {
+  id: string;
+  lab_id: string;
+  title: string;
+  order: number;
+};
+
 export type CurriculumLesson = {
   id: number;
   title: string;
   order: number;
   lesson_type: "video" | "quiz";
   duration_minutes: number;
+  lab_activities: LabActivity[];
 };
 
 export type CurriculumModule = {

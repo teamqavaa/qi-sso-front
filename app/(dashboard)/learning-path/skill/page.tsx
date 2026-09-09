@@ -9,8 +9,9 @@ export default async function SkillPathPage() {
   // Lab count per skill drives the card meta; uncategorized labs are ignored.
   const labsBySkill = new Map<string, number>();
   for (const lab of labs) {
-    if (!lab.skill_slug) continue;
-    labsBySkill.set(lab.skill_slug, (labsBySkill.get(lab.skill_slug) ?? 0) + 1);
+    for (const slug of lab.skill_slugs) {
+      labsBySkill.set(slug, (labsBySkill.get(slug) ?? 0) + 1);
+    }
   }
 
   return (

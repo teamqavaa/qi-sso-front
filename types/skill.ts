@@ -6,4 +6,8 @@ export type Skill = {
   icon: string;
   order: number;
   is_active: boolean;
+  duration_weeks: number;
+  pace: string;
+  includes_certificate: boolean;
+  lab_count: number;
 };
