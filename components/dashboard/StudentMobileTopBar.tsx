@@ -125,12 +125,12 @@ export default function StudentMobileTopBar() {
               )}
             </Link>
             <Link
-              href="/careers"
+              href="/career-tracks"
               onClick={() => setIsMenuOpen(false)}
-              aria-current={pathname.startsWith("/careers") ? "page" : undefined}
+              aria-current={pathname.startsWith("/career-tracks") ? "page" : undefined}
               className={cn(
                 "flex items-center gap-2 border-b border-neutral-100 py-2",
-                pathname.startsWith("/careers") ? "text-blue-400" : "text-neutral-900"
+                pathname.startsWith("/career-tracks") ? "text-blue-400" : "text-neutral-900"
               )}
             >
               <Briefcase className="h-5 w-5" />

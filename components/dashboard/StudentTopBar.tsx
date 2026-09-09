@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils";
 
 // Mirrors the contents-lab pill top bar so the student home shares the look of
 // the public landing page. The logo links home; "My Learning" is the dashboard,
-// "Browse Courses" opens the catalog in contents-lab, and "Explore Careers"
-// links to a not-yet-wired route (404 until it's built).
+// "Browse Courses" opens the catalog, and "Explore Careers" opens the full
+// career-tracks listing (same page as the contents-lab /careers experience).
 export default function StudentTopBar() {
   const { user } = useUser();
   const { itemCount } = useCart();
@@ -72,11 +72,11 @@ export default function StudentTopBar() {
                 Browse Courses
               </Link>
               <Link
-                href="/careers"
-                aria-current={pathname.startsWith("/careers") ? "page" : undefined}
+                href="/career-tracks"
+                aria-current={pathname.startsWith("/career-tracks") ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase transition-colors",
-                  pathname.startsWith("/careers") ? "text-blue-400" : "text-black hover:text-blue-400"
+                  pathname.startsWith("/career-tracks") ? "text-blue-400" : "text-black hover:text-blue-400"
                 )}
               >
                 <Briefcase size={14} strokeWidth={2} />
