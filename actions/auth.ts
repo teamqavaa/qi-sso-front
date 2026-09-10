@@ -4,10 +4,44 @@ import { cookies } from "next/headers";
 
 const DJANGO_API_URL = process.env.DJANGO_API_URL || "http://127.0.0.1:8000";
 
+// Configuration unifiée et sécurisée des cookies
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+};
+
+// Alignement exact avec votre configuration Django SIMPLE_JWT
+const TOKEN_MAX_AGES = {
+  ACCESS: 60 * 60 * 24,       // 1 jour (aligné sur timedelta(days=1))
+  REFRESH: 60 * 60 * 24 * 30, // 30 jours (aligné sur timedelta(days=30))
+};
+
 export type AuthActionResult =
   | { success: true; error?: never; redirectTo?: never }
   | { redirectTo: string; success?: never; error?: never }
   | { error: string; success?: never; redirectTo?: never };
+
+/**
+ * Fonction utilitaire pour écrire les cookies d'authentification de manière uniforme.
+ * Typage corrigé pour accepter explicitement `string | undefined` sur le paramètre `refresh`.
+ */
+async function setAuthCookies(access: string, refresh?: string | undefined) {
+  const cookieStore = await cookies();
+  cookieStore.set("access_token", access, {
+    ...COOKIE_OPTIONS,
+    maxAge: TOKEN_MAX_AGES.ACCESS,
+  });
+
+  // Si Django renvoie un nouveau refresh token (en cas de rotation), on le met à jour aussi
+  if (refresh) {
+    cookieStore.set("refresh_token", refresh, {
+      ...COOKIE_OPTIONS,
+      maxAge: TOKEN_MAX_AGES.REFRESH,
+    });
+  }
+}
 
 /**
  * Fonction utilitaire réutilisable pour interroger Django OAuth Toolkit
@@ -79,16 +113,11 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
     return { error: "Fields are required." };
   }
 
-  const payload = {
-    username: identifier,
-    password: password,
-  };
-
   try {
     const response = await fetch(`${DJANGO_API_URL}/api/auth/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ username: identifier, password }),
     });
 
     if (!response.ok) {
@@ -98,23 +127,7 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
     }
 
     const data = await response.json();
-    const cookieStore = await cookies();
-
-    cookieStore.set("access_token", data.access, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 15,
-    });
-
-    cookieStore.set("refresh_token", data.refresh, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    await setAuthCookies(data.access, data.refresh);
 
     const ssoResult = await handleSSORedirection(
       data.access,
@@ -151,20 +164,18 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
     };
   }
 
-  const payload = {
-    name: name,
-    password: password,
-    email: emailInput,
-    phone: phoneInput,
-  };
-
   try {
     const response = await fetch(`${DJANGO_API_URL}/api/users/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        name,
+        password,
+        email: emailInput,
+        phone: phoneInput,
+      }),
     });
 
     const data = await response.json().catch(() => ({}));
@@ -176,23 +187,7 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
       return { error: data.detail || "Une erreur est survenue lors de l'inscription." };
     }
 
-    const cookieStore = await cookies();
-
-    cookieStore.set("access_token", data.access, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 15,
-    });
-
-    cookieStore.set("refresh_token", data.refresh, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    await setAuthCookies(data.access, data.refresh);
 
     const ssoResult = await handleSSORedirection(
       data.access,
@@ -215,14 +210,15 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
 
 export async function getMeAction() {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("access_token")?.value;
+  let accessToken = cookieStore.get("access_token")?.value;
+  const refreshToken = cookieStore.get("refresh_token")?.value;
 
   if (!accessToken) {
     return { user: null, error: "Non authentifié" };
   }
 
   try {
-    const response = await fetch(`${DJANGO_API_URL}/api/users/me/`, {
+    let response = await fetch(`${DJANGO_API_URL}/api/users/me/`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -231,16 +227,52 @@ export async function getMeAction() {
       cache: "no-store",
     });
 
+    // Si l'access token a expiré, on tente de le rafraîchir
+    if (response.status === 401 && refreshToken) {
+      const refreshResponse = await fetch(`${DJANGO_API_URL}/api/auth/token/refresh/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+
+        if (!refreshData.access) {
+          return { user: null, error: "Erreur de rafraîchissement du token" };
+        }
+
+        accessToken = refreshData.access as string;
+        // Si ROTATE_REFRESH_TOKENS est actif, Django renvoie un nouveau refresh token
+        const newRefresh: string | undefined = refreshData.refresh;
+
+        // Mise à jour sécurisée des cookies avec prise en compte de la rotation
+        await setAuthCookies(accessToken, newRefresh);
+
+        // On relance la requête initiale avec le nouveau token
+        response = await fetch(`${DJANGO_API_URL}/api/users/me/`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        });
+      } else {
+        // En cas d'échec du refresh (token noirci ou expiré), on nettoie
+        cookieStore.delete("access_token");
+        cookieStore.delete("refresh_token");
+      }
+    }
+
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      console.error("🔴 Erreur /users/me/ Django :", data);
       return { user: null, error: "Impossible de récupérer le profil" };
     }
 
     return { user: data, error: null };
   } catch (error) {
-    console.error("🚨 Erreur réseau getMeAction :", error);
     return { user: null, error: "Erreur réseau" };
   }
 }
@@ -276,23 +308,7 @@ export async function loginWithGoogleAction(
     }
 
     const data = await response.json();
-    const cookieStore = await cookies();
-
-    cookieStore.set("access_token", data.access, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 15,
-    });
-
-    cookieStore.set("refresh_token", data.refresh, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    await setAuthCookies(data.access, data.refresh);
 
     const ssoResult = await handleSSORedirection(
       data.access,
@@ -313,11 +329,6 @@ export async function loginWithGoogleAction(
   }
 }
 
-
-/**
- * Action dédiée aux utilisateurs DÉJÀ CONNECTÉS sur le Portail SSO.
- * Génère le code OAuth2 SSO à partir du cookie access_token existant.
- */
 export async function checkSSOSessionAction(
   clientId: string | null,
   redirectUri: string | null,
@@ -328,12 +339,10 @@ export async function checkSSOSessionAction(
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
 
-  // S'il n'y a pas de jeton d'accès ou pas de paramètres OAuth2, on ne fait rien
   if (!accessToken || !clientId || !redirectUri) {
     return { success: true };
   }
 
-  // On délègue la génération du code d'autorisation SSO à Django
   const ssoResult = await handleSSORedirection(
     accessToken,
     clientId,
