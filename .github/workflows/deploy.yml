@@ -44,12 +44,18 @@ jobs:
           docker build -t $IMAGE_TAG .
           docker push $IMAGE_TAG
 
+      # Option recommandée : Action officielle Cloud Run avec id: deploy
       - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          flags: '--allow-unauthenticated --port=3000'
+
+      # Étape d'affichage de l'URL
+      - name: Show Service URL
         run: |
-          IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}"
-          gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image $IMAGE_TAG \
-            --region ${{ env.REGION }} \
-            --platform managed \
-            --allow-unauthenticated \
-            --port 3000
+          echo "Deploiement reussi"
+          echo "URL du service : ${{ steps.deploy.outputs.url }}"
