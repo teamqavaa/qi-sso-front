@@ -47,6 +47,8 @@ async function setAuthCookies(access: string, refresh?: string | undefined) {
  * Fonction utilitaire réutilisable pour interroger Django OAuth Toolkit
  * et récupérer l'URL de redirection contenant le code d'autorisation SSO et le state.
  */
+const PROD_CALLBACK_URL = "https://qi-front-app-l2tbnetuqa-ew.a.run.app/api/auth/callback";
+
 async function handleSSORedirection(
   accessToken: string,
   clientId: string | null,
@@ -59,6 +61,12 @@ async function handleSSORedirection(
     return null;
   }
 
+  // ✅ Force l'URL de production si la valeur reçue contient 0.0.0.0 ou est invalide
+  let cleanRedirectUri = redirectUri;
+  if (cleanRedirectUri.includes("0.0.0.0") || process.env.NODE_ENV === "production") {
+    cleanRedirectUri = PROD_CALLBACK_URL;
+  }
+
   try {
     const response = await fetch(`${DJANGO_API_URL}/api/sso/generate-code/`, {
       method: "POST",
@@ -68,7 +76,7 @@ async function handleSSORedirection(
       },
       body: JSON.stringify({
         client_id: clientId,
-        redirect_uri: redirectUri,
+        redirect_uri: cleanRedirectUri, // On envoie l'URL propre à Django
         code_challenge: codeChallenge,
         code_challenge_method: codeChallengeMethod || "S256",
       }),
@@ -79,12 +87,12 @@ async function handleSSORedirection(
     try {
       data = JSON.parse(rawText);
     } catch {
-      console.error("🔴 Le serveur Django a renvoyé du HTML au lieu de JSON (Code HTTP:", response.status, ")");
-      return { error: `Erreur serveur Django (${response.status}). Vérifiez les logs backend.` };
+      console.error("🔴 Le serveur Django a renvoyé du HTML (Code HTTP:", response.status, ")");
+      return { error: `Erreur serveur Django (${response.status}).` };
     }
 
     if (response.ok && data.code) {
-      const redirectUrl = new URL(redirectUri);
+      const redirectUrl = new URL(cleanRedirectUri); // Reconstitution sur la bonne base HTTPS
       redirectUrl.searchParams.set("code", data.code);
       if (state) {
         redirectUrl.searchParams.set("state", state);
