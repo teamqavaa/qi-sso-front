@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 
-const DJANGO_API_URL = process.env.DJANGO_API_URL || "https://qavaa-innovate-sso-zlvwvifuvq-ew.a.run.app/api/docs/#/";
+const DJANGO_API_URL = process.env.DJANGO_API_URL || "https://qavaa-innovate-sso-zlvwvifuvq-ew.a.run.app";
 
 // Configuration unifiée et sécurisée des cookies
 const COOKIE_OPTIONS = {
