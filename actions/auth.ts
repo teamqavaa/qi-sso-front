@@ -49,6 +49,7 @@ async function setAuthCookies(access: string, refresh?: string | undefined) {
  */
 const PROD_CALLBACK_URL = "https://qi-front-app-l2tbnetuqa-ew.a.run.app/api/auth/callback";
 
+// Extrait corrigé de handleSSORedirection dans auth.ts (SSO)
 async function handleSSORedirection(
   accessToken: string,
   clientId: string | null,
@@ -61,9 +62,9 @@ async function handleSSORedirection(
     return null;
   }
 
-  // ✅ Force l'URL de production si la valeur reçue contient 0.0.0.0 ou est invalide
+  // Si redirectUri est valide, on conserve le paramètre d'origine en dehors de 0.0.0.0
   let cleanRedirectUri = redirectUri;
-  if (cleanRedirectUri.includes("0.0.0.0") || process.env.NODE_ENV === "production") {
+  if (cleanRedirectUri.includes("0.0.0.0")) {
     cleanRedirectUri = PROD_CALLBACK_URL;
   }
 
@@ -76,7 +77,7 @@ async function handleSSORedirection(
       },
       body: JSON.stringify({
         client_id: clientId,
-        redirect_uri: cleanRedirectUri, // On envoie l'URL propre à Django
+        redirect_uri: cleanRedirectUri,
         code_challenge: codeChallenge,
         code_challenge_method: codeChallengeMethod || "S256",
       }),
@@ -87,12 +88,12 @@ async function handleSSORedirection(
     try {
       data = JSON.parse(rawText);
     } catch {
-      console.error("🔴 Le serveur Django a renvoyé du HTML (Code HTTP:", response.status, ")");
-      return { error: `Erreur serveur Django (${response.status}).` };
+      console.error("🔴 Erreur HTML Django:", response.status, rawText);
+      return { error: `Erreur serveur SSO Backend (${response.status})` };
     }
 
     if (response.ok && data.code) {
-      const redirectUrl = new URL(cleanRedirectUri); // Reconstitution sur la bonne base HTTPS
+      const redirectUrl = new URL(cleanRedirectUri);
       redirectUrl.searchParams.set("code", data.code);
       if (state) {
         redirectUrl.searchParams.set("state", state);
@@ -100,13 +101,12 @@ async function handleSSORedirection(
       return { redirectTo: redirectUrl.toString() };
     }
 
-    console.error("🔴 Erreur génération code SSO :", data);
-    return { error: data.error || "Impossible de générer le code d'autorisation SSO." };
+    return { error: data.error_description || data.detail || "Échec génération code SSO." };
   } catch (error) {
-    console.error("🚨 Erreur réseau SSO :", error);
-    return { error: "Erreur lors de la communication avec le serveur SSO." };
+    return { error: "Erreur réseau avec le serveur d'autorisation SSO." };
   }
 }
+
 
 export async function loginAction(formData: FormData): Promise<AuthActionResult> {
   const identifier = formData.get("identifier") as string;
