@@ -25,9 +25,9 @@ export type AuthActionResult =
 
 /**
  * Fonction utilitaire pour écrire les cookies d'authentification de manière uniforme.
- * Typage corrigé pour accepter explicitement `string | undefined` sur le paramètre `refresh`.
+ * Gère désormais aussi l'enregistrement de l'id_token pour la déconnexion OIDC.
  */
-async function setAuthCookies(access: string, refresh?: string | undefined) {
+async function setAuthCookies(access: string, refresh?: string | undefined, idToken?: string | undefined) {
   const cookieStore = await cookies();
   cookieStore.set("access_token", access, {
     ...COOKIE_OPTIONS,
@@ -41,6 +41,17 @@ async function setAuthCookies(access: string, refresh?: string | undefined) {
       maxAge: TOKEN_MAX_AGES.REFRESH,
     });
   }
+
+  // Stockage de l'id_token (httpOnly: false pour permettre la lecture côté client si besoin, ou géré ici)
+  if (idToken) {
+    cookieStore.set("id_token", idToken, {
+      httpOnly: false, // Nécessaire pour que le client puisse l'utiliser ou l'inspecter si requis
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: TOKEN_MAX_AGES.ACCESS,
+    });
+  }
 }
 
 /**
@@ -49,7 +60,6 @@ async function setAuthCookies(access: string, refresh?: string | undefined) {
  */
 const PROD_CALLBACK_URL = "https://qi-front-app-l2tbnetuqa-ew.a.run.app/api/auth/callback";
 
-// Extrait corrigé de handleSSORedirection dans auth.ts (SSO)
 async function handleSSORedirection(
   accessToken: string,
   clientId: string | null,
@@ -62,7 +72,6 @@ async function handleSSORedirection(
     return null;
   }
 
-  // Si redirectUri est valide, on conserve le paramètre d'origine en dehors de 0.0.0.0
   let cleanRedirectUri = redirectUri;
   if (cleanRedirectUri.includes("0.0.0.0")) {
     cleanRedirectUri = PROD_CALLBACK_URL;
@@ -107,7 +116,6 @@ async function handleSSORedirection(
   }
 }
 
-
 export async function loginAction(formData: FormData): Promise<AuthActionResult> {
   const identifier = formData.get("identifier") as string;
   const password = formData.get("password") as string;
@@ -135,7 +143,7 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
     }
 
     const data = await response.json();
-    await setAuthCookies(data.access, data.refresh);
+    await setAuthCookies(data.access, data.refresh, data.id_token);
 
     const ssoResult = await handleSSORedirection(
       data.access,
@@ -195,7 +203,7 @@ export async function registerAction(formData: FormData): Promise<AuthActionResu
       return { error: data.detail || "Une erreur est survenue lors de l'inscription." };
     }
 
-    await setAuthCookies(data.access, data.refresh);
+    await setAuthCookies(data.access, data.refresh, data.id_token);
 
     const ssoResult = await handleSSORedirection(
       data.access,
@@ -251,11 +259,11 @@ export async function getMeAction() {
         }
 
         accessToken = refreshData.access as string;
-        // Si ROTATE_REFRESH_TOKENS est actif, Django renvoie un nouveau refresh token
         const newRefresh: string | undefined = refreshData.refresh;
+        const newIdToken: string | undefined = refreshData.id_token;
 
         // Mise à jour sécurisée des cookies avec prise en compte de la rotation
-        await setAuthCookies(accessToken, newRefresh);
+        await setAuthCookies(accessToken, newRefresh, newIdToken);
 
         // On relance la requête initiale avec le nouveau token
         response = await fetch(`${DJANGO_API_URL}/api/users/me/`, {
@@ -267,9 +275,10 @@ export async function getMeAction() {
           cache: "no-store",
         });
       } else {
-        // En cas d'échec du refresh (token noirci ou expiré), on nettoie
+        // En cas d'échec du refresh, on nettoie tout
         cookieStore.delete("access_token");
         cookieStore.delete("refresh_token");
+        cookieStore.delete("id_token");
       }
     }
 
@@ -316,7 +325,7 @@ export async function loginWithGoogleAction(
     }
 
     const data = await response.json();
-    await setAuthCookies(data.access, data.refresh);
+    await setAuthCookies(data.access, data.refresh, data.id_token);
 
     const ssoResult = await handleSSORedirection(
       data.access,
@@ -361,4 +370,37 @@ export async function checkSSOSessionAction(
   );
 
   return ssoResult || { success: true };
+}
+
+/**
+ * Action de déconnexion globale gérant l'id_token_hint vers Django SSO.
+ */
+export async function logoutAction() {
+  const cookieStore = await cookies();
+
+  // Récupération de l'id_token avant de purger les cookies
+  const idToken = cookieStore.get("id_token")?.value;
+
+  // Suppression de tous les cookies d'authentification locaux
+  cookieStore.delete("access_token");
+  cookieStore.delete("refresh_token");
+  cookieStore.delete("id_token");
+
+  const ssoApiUrl = DJANGO_API_URL.replace(/\/$/, '');
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://qi-front-app-l2tbnetuqa-ew.a.run.app").replace(/\/$/, '');
+  const targetRedirect = `${appUrl}/login`;
+
+  // Construction de l'URL de déconnexion Django OIDC (`/api/o/logout/`)
+  const logoutUrl = new URL(`${ssoApiUrl}/api/o/logout/`);
+  logoutUrl.searchParams.set('post_logout_redirect_uri', targetRedirect);
+  logoutUrl.searchParams.set('next', targetRedirect);
+
+  if (idToken) {
+    logoutUrl.searchParams.set('id_token_hint', idToken);
+  }
+
+  return {
+    success: true,
+    ssoLogoutUrl: logoutUrl.toString(),
+  };
 }
