@@ -123,15 +123,21 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
   }
 
   try {
-    // 🟢 Utilisation de l'endpoint natif OAuth2 /o/token/ de Django OAuth Toolkit
+    // 🟢 Construction des paramètres en incluant optionnellement le client_id
+    const bodyParams = new URLSearchParams({
+      grant_type: "password",
+      username: identifier,
+      password: password,
+    });
+
+    if (clientId) {
+      bodyParams.append("client_id", clientId);
+    }
+
     const response = await fetch(`${DJANGO_API_URL}/o/token/`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type: "password",
-        username: identifier,
-        password: password,
-      }),
+      body: bodyParams,
     });
 
     if (!response.ok) {
@@ -141,7 +147,6 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
     }
 
     const data = await response.json();
-    // DOT renvoie 'access_token' et 'refresh_token'
     await setAuthCookies(data.access_token, data.refresh_token, data.id_token);
 
     const ssoResult = await handleSSORedirection(
