@@ -12,10 +12,10 @@ const COOKIE_OPTIONS = {
   path: "/",
 };
 
-// Alignement exact avec votre configuration Django SIMPLE_JWT
+// Durées de vie des tokens alignées avec OAuth2 Toolkit / Django
 const TOKEN_MAX_AGES = {
-  ACCESS: 60 * 60 * 24,       // 1 jour (aligné sur timedelta(days=1))
-  REFRESH: 60 * 60 * 24 * 30, // 30 jours (aligné sur timedelta(days=30))
+  ACCESS: 60 * 60 * 24,       // 1 jour
+  REFRESH: 60 * 60 * 24 * 30, // 30 jours
 };
 
 export type AuthActionResult =
@@ -25,7 +25,6 @@ export type AuthActionResult =
 
 /**
  * Fonction utilitaire pour écrire les cookies d'authentification de manière uniforme.
- * Gère désormais aussi l'enregistrement de l'id_token pour la déconnexion OIDC.
  */
 async function setAuthCookies(access: string, refresh?: string | undefined, idToken?: string | undefined) {
   const cookieStore = await cookies();
@@ -34,7 +33,6 @@ async function setAuthCookies(access: string, refresh?: string | undefined, idTo
     maxAge: TOKEN_MAX_AGES.ACCESS,
   });
 
-  // Si Django renvoie un nouveau refresh token (en cas de rotation), on le met à jour aussi
   if (refresh) {
     cookieStore.set("refresh_token", refresh, {
       ...COOKIE_OPTIONS,
@@ -42,10 +40,9 @@ async function setAuthCookies(access: string, refresh?: string | undefined, idTo
     });
   }
 
-  // Stockage de l'id_token (httpOnly: false pour permettre la lecture côté client si besoin, ou géré ici)
   if (idToken) {
     cookieStore.set("id_token", idToken, {
-      httpOnly: false, // Nécessaire pour que le client puisse l'utiliser ou l'inspecter si requis
+      httpOnly: false, // Accessible côté client si nécessaire
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
@@ -54,10 +51,6 @@ async function setAuthCookies(access: string, refresh?: string | undefined, idTo
   }
 }
 
-/**
- * Fonction utilitaire réutilisable pour interroger Django OAuth Toolkit
- * et récupérer l'URL de redirection contenant le code d'autorisation SSO et le state.
- */
 const PROD_CALLBACK_URL = "https://qi-front-app-l2tbnetuqa-ew.a.run.app/api/auth/callback";
 
 async function handleSSORedirection(
@@ -130,23 +123,29 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
   }
 
   try {
-    const response = await fetch(`${DJANGO_API_URL}/api/auth/login/`, {
+    // 🟢 Utilisation de l'endpoint natif OAuth2 /o/token/ de Django OAuth Toolkit
+    const response = await fetch(`${DJANGO_API_URL}/o/token/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: identifier, password }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "password",
+        username: identifier,
+        password: password,
+      }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.log("🔴 Erreur Django REST :", response.status, errorData);
-      return { error: errorData.detail || "Invalid credentials." };
+      console.log("🔴 Erreur OAuth2 Token :", response.status, errorData);
+      return { error: errorData.error_description || errorData.detail || "Invalid credentials." };
     }
 
     const data = await response.json();
-    await setAuthCookies(data.access, data.refresh, data.id_token);
+    // DOT renvoie 'access_token' et 'refresh_token'
+    await setAuthCookies(data.access_token, data.refresh_token, data.id_token);
 
     const ssoResult = await handleSSORedirection(
-      data.access,
+      data.access_token,
       clientId,
       redirectUri,
       codeChallenge,
@@ -243,29 +242,30 @@ export async function getMeAction() {
       cache: "no-store",
     });
 
-    // Si l'access token a expiré, on tente de le rafraîchir
+    // Si l'access token a expiré, on utilise le refresh token OAuth2 standard
     if (response.status === 401 && refreshToken) {
-      const refreshResponse = await fetch(`${DJANGO_API_URL}/api/auth/token/refresh/`, {
+      const refreshResponse = await fetch(`${DJANGO_API_URL}/o/token/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh: refreshToken }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        }),
       });
 
       if (refreshResponse.ok) {
         const refreshData = await refreshResponse.json();
 
-        if (!refreshData.access) {
+        if (!refreshData.access_token) {
           return { user: null, error: "Erreur de rafraîchissement du token" };
         }
 
-        accessToken = refreshData.access as string;
-        const newRefresh: string | undefined = refreshData.refresh;
+        accessToken = refreshData.access_token as string;
+        const newRefresh: string | undefined = refreshData.refresh_token;
         const newIdToken: string | undefined = refreshData.id_token;
 
-        // Mise à jour sécurisée des cookies avec prise en compte de la rotation
         await setAuthCookies(accessToken, newRefresh, newIdToken);
 
-        // On relance la requête initiale avec le nouveau token
         response = await fetch(`${DJANGO_API_URL}/api/users/me/`, {
           method: "GET",
           headers: {
@@ -275,7 +275,6 @@ export async function getMeAction() {
           cache: "no-store",
         });
       } else {
-        // En cas d'échec du refresh, on nettoie tout
         cookieStore.delete("access_token");
         cookieStore.delete("refresh_token");
         cookieStore.delete("id_token");
@@ -315,12 +314,6 @@ export async function loginWithGoogleAction(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-
-      console.log("\n--- 🔴 DIAGNOSTIC ERREUR DJANGO GOOGLE ---");
-      console.log("Statut HTTP :", response.status);
-      console.log("Détails renvoyés par l'API :", JSON.stringify(errorData, null, 2));
-      console.log("------------------------------------------\n");
-
       return { error: errorData.detail || "Google authentication failed." };
     }
 
@@ -341,7 +334,6 @@ export async function loginWithGoogleAction(
 
     return { success: true };
   } catch (error) {
-    console.error("Erreur serveur Next.js (Google) :", error);
     return { error: "Unable to connect to the authentication server." };
   }
 }
@@ -372,16 +364,10 @@ export async function checkSSOSessionAction(
   return ssoResult || { success: true };
 }
 
-/**
- * Action de déconnexion globale gérant l'id_token_hint vers Django SSO.
- */
 export async function logoutAction() {
   const cookieStore = await cookies();
-
-  // Récupération de l'id_token avant de purger les cookies
   const idToken = cookieStore.get("id_token")?.value;
 
-  // Suppression de tous les cookies d'authentification locaux
   cookieStore.delete("access_token");
   cookieStore.delete("refresh_token");
   cookieStore.delete("id_token");
@@ -390,7 +376,6 @@ export async function logoutAction() {
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://qi-front-app-l2tbnetuqa-ew.a.run.app").replace(/\/$/, '');
   const targetRedirect = `${appUrl}/login`;
 
-  // Construction de l'URL de déconnexion Django OIDC (`/api/o/logout/`)
   const logoutUrl = new URL(`${ssoApiUrl}/api/o/logout/`);
   logoutUrl.searchParams.set('post_logout_redirect_uri', targetRedirect);
   logoutUrl.searchParams.set('next', targetRedirect);
