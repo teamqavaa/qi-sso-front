@@ -123,34 +123,31 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
   }
 
   try {
-    // 🟢 Construction des paramètres en incluant optionnellement le client_id
-    const bodyParams = new URLSearchParams({
-      grant_type: "password",
-      username: identifier,
-      password: password,
-    });
-
-    if (clientId) {
-      bodyParams.append("client_id", clientId);
-    }
-
-    const response = await fetch(`${DJANGO_API_URL}/o/token/`, {
+    // 🟢 CORRECTION : Utilisation de l'endpoint d'authentification standard de dj-rest-auth
+    // au lieu d'appeler directement /o/token/ avec grant_type=password.
+    const response = await fetch(`${DJANGO_API_URL}/api/auth/login/`, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: bodyParams,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: identifier,
+        password: password,
+      }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.log("🔴 Erreur OAuth2 Token :", response.status, errorData);
-      return { error: errorData.error_description || errorData.detail || "Invalid credentials." };
+      console.log("🔴 Erreur d'authentification SSO :", response.status, errorData);
+      return { error: errorData.non_field_errors?.[0] || errorData.detail || "Invalid credentials." };
     }
 
     const data = await response.json();
-    await setAuthCookies(data.access_token, data.refresh_token, data.id_token);
+    // dj-rest-auth renvoie generalement 'access' (ou 'key') et 'refresh'/'id_token'
+    const accessToken = data.access || data.key;
+    await setAuthCookies(accessToken, data.refresh, data.id_token);
 
+    // Si l'utilisateur s'est connecté dans le cadre d'un flux SSO vers une app tierce
     const ssoResult = await handleSSORedirection(
-      data.access_token,
+      accessToken,
       clientId,
       redirectUri,
       codeChallenge,
@@ -163,6 +160,7 @@ export async function loginAction(formData: FormData): Promise<AuthActionResult>
 
     return { success: true };
   } catch (error) {
+    console.error("🚨 Erreur réseau loginAction :", error);
     return { error: "Unable to connect to the authentication server." };
   }
 }
