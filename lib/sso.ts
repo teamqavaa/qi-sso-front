@@ -58,3 +58,23 @@ export async function refreshTokens(
     return null;
   }
 }
+
+// Vérification périodique de la session auprès du SSO : détecte une déconnexion globale
+// faite depuis une autre application (les tokens sont alors révoqués côté SSO).
+export const SESSION_CHECK_COOKIE = "sso_session_checked";
+export const SESSION_CHECK_SECONDS = 60;
+
+/** true : token valide, false : révoqué/expiré, null : SSO injoignable (on ne déconnecte pas). */
+export async function isAccessTokenValid(accessToken: string): Promise<boolean | null> {
+  try {
+    const response = await fetch(`${DJANGO_API_URL}/api/users/me/`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (response.ok) return true;
+    if (response.status === 401 || response.status === 403) return false;
+    return null;
+  } catch {
+    return null;
+  }
+}

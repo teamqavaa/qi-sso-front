@@ -352,27 +352,3 @@ export async function checkSSOSessionAction(
 
   return ssoResult || { success: true };
 }
-
-export async function logoutAction() {
-  const cookieStore = await cookies();
-  const idToken = cookieStore.get(AUTH_COOKIES.idToken)?.value;
-
-  await clearAuthCookies();
-
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://qi-front-app-l2tbnetuqa-ew.a.run.app").replace(
-    /\/$/,
-    ""
-  );
-
-  const logoutUrl = new URL(`${DJANGO_API_URL}/api/o/logout/`);
-  logoutUrl.searchParams.set("post_logout_redirect_uri", `${appUrl}/`);
-
-  if (idToken) {
-    logoutUrl.searchParams.set("id_token_hint", idToken);
-  }
-
-  return {
-    success: true,
-    ssoLogoutUrl: logoutUrl.toString(),
-  };
-}

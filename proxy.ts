@@ -1,52 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { AUTH_COOKIES, COOKIE_OPTIONS, TOKEN_MAX_AGES, refreshTokens } from "@/lib/sso";
+import {
+  AUTH_COOKIES,
+  COOKIE_OPTIONS,
+  SESSION_CHECK_COOKIE,
+  SESSION_CHECK_SECONDS,
+  TOKEN_MAX_AGES,
+  isAccessTokenValid,
+  refreshTokens,
+} from "@/lib/sso";
 
 const publicRoutes = ["/"];
 
+/** Modification de cookie : value absente = suppression. */
+type CookieUpdate = { name: string; value?: string; maxAge?: number };
+
 /**
- * Access token expiré (cookie absent) mais refresh token présent : on rafraîchit la session ici,
- * seul endroit où les nouveaux cookies peuvent être écrits avant le rendu de la page.
- * Retourne une réponse portant les cookies mis à jour, ou null si rien n'a été fait.
+ * Met la session à jour avant le rendu de la page :
+ * - access token révoqué (déconnexion globale faite ailleurs) ou absent -> refresh ;
+ * - refresh impossible -> session vidée.
+ * Les modifications sont appliquées à la requête (visibles par le rendu) et retournées
+ * pour être écrites dans le navigateur.
  */
-async function refreshSessionCookies(request: NextRequest): Promise<NextResponse | null> {
+async function syncSession(request: NextRequest): Promise<CookieUpdate[]> {
+  const updates: CookieUpdate[] = [];
+  const setCookie = (name: string, value: string | undefined, maxAge: number) => {
+    if (!value) return;
+    request.cookies.set(name, value);
+    updates.push({ name, value, maxAge });
+  };
+  const clearSession = () => {
+    Object.values(AUTH_COOKIES).forEach((name) => {
+      request.cookies.delete(name);
+      updates.push({ name });
+    });
+  };
+
+  let accessToken = request.cookies.get(AUTH_COOKIES.access)?.value;
   const refreshToken = request.cookies.get(AUTH_COOKIES.refresh)?.value;
-  if (request.cookies.has(AUTH_COOKIES.access) || !refreshToken) {
-    return null;
+
+  if (accessToken && !request.cookies.has(SESSION_CHECK_COOKIE)) {
+    const valid = await isAccessTokenValid(accessToken);
+    if (valid === false) {
+      accessToken = undefined;
+    } else if (valid) {
+      setCookie(SESSION_CHECK_COOKIE, "1", SESSION_CHECK_SECONDS);
+    }
   }
 
-  const tokens = await refreshTokens(refreshToken, request.cookies.get(AUTH_COOKIES.clientId)?.value);
-
-  if (!tokens) {
-    // Refresh token révoqué ou expiré : session vidée
-    Object.values(AUTH_COOKIES).forEach((name) => request.cookies.delete(name));
-    const response = NextResponse.next({ request: { headers: request.headers } });
-    Object.values(AUTH_COOKIES).forEach((name) => response.cookies.delete(name));
-    return response;
+  if (!accessToken) {
+    if (!refreshToken) {
+      if (request.cookies.has(AUTH_COOKIES.access)) clearSession();
+      return updates;
+    }
+    const tokens = await refreshTokens(refreshToken, request.cookies.get(AUTH_COOKIES.clientId)?.value);
+    if (!tokens) {
+      clearSession();
+      return updates;
+    }
+    setCookie(AUTH_COOKIES.access, tokens.access_token, TOKEN_MAX_AGES.ACCESS);
+    setCookie(AUTH_COOKIES.refresh, tokens.refresh_token, TOKEN_MAX_AGES.REFRESH);
+    setCookie(AUTH_COOKIES.idToken, tokens.id_token, TOKEN_MAX_AGES.REFRESH);
+    setCookie(SESSION_CHECK_COOKIE, "1", SESSION_CHECK_SECONDS);
   }
 
-  const updates: [string, string | undefined, number][] = [
-    [AUTH_COOKIES.access, tokens.access_token, TOKEN_MAX_AGES.ACCESS],
-    [AUTH_COOKIES.refresh, tokens.refresh_token, TOKEN_MAX_AGES.REFRESH],
-    [AUTH_COOKIES.idToken, tokens.id_token, TOKEN_MAX_AGES.REFRESH],
-  ];
-  // Visibles par le rendu de cette requête…
-  updates.forEach(([name, value]) => value && request.cookies.set(name, value));
-  const response = NextResponse.next({ request: { headers: request.headers } });
-  // …et enregistrés dans le navigateur
-  updates.forEach(([name, value, maxAge]) => value && response.cookies.set(name, value, { ...COOKIE_OPTIONS, maxAge }));
+  return updates;
+}
+
+function withCookies(response: NextResponse, updates: CookieUpdate[]) {
+  updates.forEach(({ name, value, maxAge }) =>
+    value ? response.cookies.set(name, value, { ...COOKIE_OPTIONS, maxAge }) : response.cookies.delete(name)
+  );
   return response;
 }
 
 export default async function proxy(request: NextRequest) {
-  const refreshed = await refreshSessionCookies(request);
-
-  // Redirection qui conserve les cookies éventuellement rafraîchis
-  const redirectTo = (url: URL) => {
-    const response = NextResponse.redirect(url);
-    refreshed?.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
-    return response;
-  };
+  const updates = await syncSession(request);
 
   const { pathname, searchParams } = request.nextUrl;
   const hasToken = request.cookies.has(AUTH_COOKIES.refresh);
@@ -62,16 +91,16 @@ export default async function proxy(request: NextRequest) {
   if (!hasToken && !isPublicRoute) {
     const loginUrl = new URL("/", request.url);
     loginUrl.searchParams.set("next", pathname);
-    return redirectTo(loginUrl);
+    return withCookies(NextResponse.redirect(loginUrl), updates);
   }
 
   // CAS 2 : Déjà connecté sur "/" sans flux OAuth -> Dashboard
   // (avec des paramètres OAuth, la page génère directement le code pour l'app cliente)
   if (hasToken && isPublicRoute && !hasOAuthParams) {
-    return redirectTo(new URL("/dashboard", request.url));
+    return withCookies(NextResponse.redirect(new URL("/dashboard", request.url)), updates);
   }
 
-  return refreshed ?? NextResponse.next();
+  return withCookies(NextResponse.next({ request: { headers: request.headers } }), updates);
 }
 
 export const config = {
