@@ -1,35 +1,49 @@
 "use client";
 
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 // 1. Importez votre Server Action dédiée à l'authentification Google
 // (Ajustez le chemin d'accès selon l'emplacement exact de votre fichier d'actions)
 import { loginWithGoogleAction } from "@/actions/auth";
 
-function GoogleLoginButton() {
+function GoogleLoginButton({ onError }: { onError: (message: string | null) => void }) {
+  // Paramètres OAuth2 / PKCE de l'application cliente (si la connexion vient d'elle)
+  const searchParams = useSearchParams();
+
   const login = useGoogleLogin({
     flow: "auth-code", // Requis pour échanger le code côté serveur (Django / Allauth)
     onSuccess: async (codeResponse) => {
-      console.log("Code d'autorisation Google obtenu :", codeResponse.code);
+      onError(null);
 
       try {
-        // 2. Appel de la Server Action au lieu d'un fetch client direct
-        const result = await loginWithGoogleAction(codeResponse.code);
+        // 2. Server Action : connexion + génération du code SSO si une app cliente l'a demandé
+        const result = await loginWithGoogleAction(
+          codeResponse.code,
+          searchParams.get("client_id"),
+          searchParams.get("redirect_uri"),
+          searchParams.get("code_challenge"),
+          searchParams.get("code_challenge_method") || "S256",
+          searchParams.get("state")
+        );
 
-        if (result?.success) {
-          console.log("Connexion réussie via Server Action !");
-
-          // 3. Redirection de l'utilisateur (les tokens sont déjà stockés dans les cookies httpOnly)
+        if (result?.redirectTo) {
+          // Retour vers le callback de l'application cliente avec le code OAuth2
+          window.location.href = result.redirectTo;
+        } else if (result?.success) {
           window.location.href = "/dashboard";
         } else {
-          console.error("Erreur d'authentification renvoyée par le serveur :", result?.error);
+          onError(result?.error || "Échec de la connexion Google.");
         }
       } catch (error) {
         console.error("Erreur inattendue lors de la connexion Google :", error);
+        onError("Échec de la connexion Google.");
       }
     },
     onError: (error) => {
       console.error("Échec de l'authentification Google (Popup) :", error);
+      onError("Connexion Google annulée ou refusée.");
     },
   });
 
@@ -62,13 +76,25 @@ function GoogleLoginButton() {
   );
 }
 
+// Le Client ID Google est public (il est visible dans le navigateur) ; surchargeable par variable d'env.
+const GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+  "851426549201-kagnf9bjrh66jlug4qqiuhv9jnah0nni.apps.googleusercontent.com";
+
 export default function Social() {
+  const [error, setError] = useState<string | null>(null);
+
   return (
-    <GoogleOAuthProvider clientId="851426549201-kagnf9bjrh66jlug4qqiuhv9jnah0nni.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      {error && (
+        <div className="mt-6 p-3 text-sm text-red-500 bg-red-50 rounded-lg border border-red-200">
+          {error}
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 mt-6">
 
         {/* Bouton Google connecté */}
-        <GoogleLoginButton />
+        <GoogleLoginButton onError={setError} />
 
         {/* Microsoft (Statique pour le moment) */}
         <Button

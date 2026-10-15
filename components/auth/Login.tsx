@@ -139,7 +139,7 @@ export default function Login({ onSwitchToRegister }: LoginProps) {
 
         {/* Footer d'assistance */}
         <p className="text-center text-xs text-slate-500 dark:text-slate-500 lg:text-left">
-          Don't have an account yet?
+          Don&apos;t have an account yet?
           <button
             type="button"
             onClick={onSwitchToRegister}
