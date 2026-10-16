@@ -10,7 +10,8 @@ import {
   refreshTokens,
 } from "@/lib/sso";
 
-const publicRoutes = ["/"];
+// "/password" : mot de passe oublié (visiteur) ou changement de mot de passe (connecté)
+const publicRoutes = ["/", "/password"];
 
 /** Modification de cookie : value absente = suppression. */
 type CookieUpdate = { name: string; value?: string; maxAge?: number };
@@ -96,7 +97,7 @@ export default async function proxy(request: NextRequest) {
 
   // CAS 2 : Déjà connecté sur "/" sans flux OAuth -> Dashboard
   // (avec des paramètres OAuth, la page génère directement le code pour l'app cliente)
-  if (hasToken && isPublicRoute && !hasOAuthParams) {
+  if (hasToken && pathname === "/" && !hasOAuthParams) {
     return withCookies(NextResponse.redirect(new URL("/dashboard", request.url)), updates);
   }
 

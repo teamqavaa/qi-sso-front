@@ -110,10 +110,10 @@ export default function Login({ onSwitchToRegister }: LoginProps) {
                   Password
                 </Label>
                 <Link
-                  href="/password"
+                  href={`/password${searchParams.size ? `?${searchParams}` : ""}`}
                   className="text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400"
                 >
-                  Reset password
+                  Forgot password?
                 </Link>
               </div>
               <Input

@@ -352,3 +352,110 @@ export async function checkSSOSessionAction(
 
   return ssoResult || { success: true };
 }
+
+// ---------------------------------------------------------------------------------------
+// Mot de passe oublié / changement de mot de passe (page /password)
+// ---------------------------------------------------------------------------------------
+
+export type PasswordActionResult = { ok: true; message?: string } | { ok: false; error: string; field?: string };
+
+/** Premier message d'erreur DRF ({champ: [message]} ou {detail}) et le champ concerné. */
+function apiError(data: Record<string, unknown>, fallback: string): { error: string; field?: string } {
+  for (const field of ["code", "new_password", "current_password", "email", "non_field_errors"]) {
+    const value = data[field];
+    if (Array.isArray(value) && value.length) return { error: String(value[0]), field };
+  }
+  return { error: (data.detail as string) || fallback };
+}
+
+async function postSSO(path: string, body: Record<string, string>, accessToken?: string) {
+  const response = await fetch(`${DJANGO_API_URL}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  return { response, data: await response.json().catch(() => ({})) };
+}
+
+const TOO_MANY = "Trop de tentatives. Réessayez dans une minute.";
+const NETWORK = "Impossible de joindre le serveur d'authentification.";
+
+/** Étape 1 : envoie un code à 6 chiffres à l'adresse du compte (réponse identique si le compte n'existe pas). */
+export async function requestPasswordResetAction(email: string): Promise<PasswordActionResult> {
+  try {
+    const { response, data } = await postSSO("/api/auth/password/reset/", { email: email.trim() });
+    if (response.status === 429) return { ok: false, error: TOO_MANY };
+    if (!response.ok) return { ok: false, ...apiError(data, "Adresse email invalide.") };
+    return { ok: true, message: data.detail };
+  } catch {
+    return { ok: false, error: NETWORK };
+  }
+}
+
+/** Étape 2 : vérifie le code reçu par email (sans le consommer). */
+export async function verifyPasswordResetCodeAction(email: string, code: string): Promise<PasswordActionResult> {
+  try {
+    const { response, data } = await postSSO("/api/auth/password/reset/verify/", { email: email.trim(), code: code.trim() });
+    if (response.status === 429) return { ok: false, error: TOO_MANY };
+    if (!response.ok) return { ok: false, ...apiError(data, "Code invalide ou expiré.") };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: NETWORK };
+  }
+}
+
+/**
+ * Étape 3 : enregistre le nouveau mot de passe puis connecte l'utilisateur. Si la demande
+ * vient d'une application cliente (paramètres OAuth du formulaire), renvoie vers son callback.
+ */
+export async function confirmPasswordResetAction(
+  formData: FormData
+): Promise<PasswordActionResult | AuthActionResult> {
+  const email = String(formData.get("email") || "").trim();
+  const code = String(formData.get("code") || "").trim();
+  const newPassword = String(formData.get("new_password") || "");
+
+  try {
+    const { response, data } = await postSSO("/api/auth/password/reset/confirm/", {
+      email,
+      code,
+      new_password: newPassword,
+    });
+    if (response.status === 429) return { ok: false, error: TOO_MANY };
+    if (!response.ok) return { ok: false, ...apiError(data, "Réinitialisation impossible.") };
+
+    const login = await passwordLogin(email, newPassword);
+    const loginData = await login.json().catch(() => ({}));
+    if (!login.ok) return { ok: true, message: "Mot de passe modifié. Vous pouvez vous connecter." };
+    return completeLogin(loginData, oauthParamsFromForm(formData));
+  } catch {
+    return { ok: false, error: NETWORK };
+  }
+}
+
+/** Utilisateur déjà connecté : changement avec le mot de passe actuel (pas besoin d'email). */
+export async function changePasswordAction(formData: FormData): Promise<PasswordActionResult> {
+  const cookieStore = await cookies();
+  let accessToken = cookieStore.get(AUTH_COOKIES.access)?.value;
+  const body = {
+    current_password: String(formData.get("current_password") || ""),
+    new_password: String(formData.get("new_password") || ""),
+  };
+
+  try {
+    let result = accessToken ? await postSSO("/api/users/me/change-password/", body, accessToken) : null;
+    if (!result || result.response.status === 401) {
+      accessToken = (await refreshSession()) ?? undefined;
+      if (!accessToken) return { ok: false, error: "Votre session a expiré, veuillez vous reconnecter." };
+      result = await postSSO("/api/users/me/change-password/", body, accessToken);
+    }
+    if (!result.response.ok) return { ok: false, ...apiError(result.data, "Changement impossible.") };
+    return { ok: true, message: "Mot de passe modifié avec succès." };
+  } catch {
+    return { ok: false, error: NETWORK };
+  }
+}
